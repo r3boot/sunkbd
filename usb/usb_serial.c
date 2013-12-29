@@ -314,7 +314,7 @@ static uint8_t cdc_line_rtsdtr=0;
  **************************************************************************/
 
 // initialize USB serial
-void usb_init(void)
+void usb_serial_init(void)
 {
 	HW_CONFIG();
         USB_FREEZE();				// enable USB
@@ -330,7 +330,7 @@ void usb_init(void)
 
 // return 0 if the USB is not configured, or the configuration
 // number selected by the HOST
-uint8_t usb_configured(void)
+uint8_t usb_serial_configured(void)
 {
 	return usb_configuration;
 }

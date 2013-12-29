@@ -47,6 +47,7 @@ TARGET = sunkbd
 # List C source files here. (C dependencies are automatically generated.)
 SRC =	$(TARGET).c \
 	usb/usb_serial.c \
+	usb/usb_rawhid.c \
 	kbd/uart.c \
 	kbd/keyboard.c
 

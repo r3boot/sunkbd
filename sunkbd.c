@@ -35,6 +35,7 @@
 #define CPU_PRESCALE(n) (CLKPR = 0x80, CLKPR = (n))
 
 volatile unsigned char hid_report_in[HID_INT_IN_EP_SIZE];
+uint8_t use_debug = 0;
 
 void usb_print(const char *s);
 uint8_t recv_str(char *buf, uint8_t size);
@@ -62,68 +63,77 @@ int main(void)
 
 	// set for 16 MHz clock, and turn on the LED
 	CPU_PRESCALE(0);
-	LED_CONFIG;
-	LED_ON;
 
-	// initialize the USB, and then wait for the host
-	// to set configuration.  If the Teensy is powered
-	// without a PC connected to the USB port, this
-	// will wait forever.
-	usb_init();
-	while (!usb_configured()) /* wait */ ;
-	_delay_ms(1000);
+	LED_CONFIG;
+    DEBUG_CONFIG;
+    if (ENABLE_DEBUG)
+        use_debug = 1;
+
+    LED_ON;
 
     // initialize the keyboard uart
     uart_init(1200);
     uart_putc(COMMAND_RESET);
 
+    // initialize the USB, and then wait for the host
+    // to set configuration.  If the Teensy is powered
+    // without a PC connected to the USB port, this
+    // will wait forever.
+    if (use_debug) {
+        // Use USB-Serial to debug output from keyboard
+        usb_serial_init();
+        while (!usb_serial_configured()) /* wait */ ;
+        _delay_ms(1000);
+    } else {
+        // Use USB raw-hid to transfer scancodes from the keyboard
+        usb_rawhid_init();
+        while (!usb_rawhid_configured()) /* wait */ ;
+        _delay_ms(1000);
+
+        // Configure timer 0 to generate a timer overflow interrupt every
+        // 256*1024 clock cycles, or approx 61 Hz when using 16 MHz clock
+        TCCR0A = 0x00;
+        TCCR0B = 0x05;
+        TIMSK0 = (1<<TOIE0);
+    }
+
+    LED_OFF;
 	while (1) {
-		// wait for the user to run their terminal emulator program
-		// which sets DTR to indicate it is ready to receive.
-		while (!(usb_serial_get_control() & USB_SERIAL_DTR)) /* wait */ ;
+        if (use_debug) {
+            // wait for the user to run their terminal emulator program
+            // which sets DTR to indicate it is ready to receive.
+            while (!(usb_serial_get_control() & USB_SERIAL_DTR)) /* wait */ ;
 
-		// discard anything that was received prior.  Sometimes the
-		// operating system or other software will send a modem
-		// "AT command", which can still be buffered.
-		usb_serial_flush_input();
+            // discard anything that was received prior.  Sometimes the
+            // operating system or other software will send a modem
+            // "AT command", which can still be buffered.
+            usb_serial_flush_input();
 
-		// print a nice welcome message
-		usb_print(PSTR("\r\nTeensy USB Serial Example\r\n"));
+            // print a nice welcome message
+            usb_print(PSTR("\r\nSun Type 5 Keyboard Debugger\r\n"));
+        }
 
 		// and then listen for commands and process them
-        char c;
 		while (1) {
-            char b[10];
 
             if (mediaButtonsChanged) {
-                //Media keys need to be sent once when they're pressed, and again when they're released
+                // Media keys need to be sent once when they're pressed,
+                // and again when they're released
                 hid_report_in[0]=2; //Set report ID
                 hid_report_in[1]=media_button_state;
                 mediaButtonsChanged=0;
-                snprintf(b, 10, "%x", hid_report_in);
-                usb_print(b);
             } else if (power_button_state) {
-                //Power button is sent if it's been pressed, releasing/holding it is ignored: its status is reset instantly
+                // Power button is sent if it's been pressed, releasing /
+                // holding it is ignored: its status is reset instantly
                 hid_report_in[0]=3; //Set report ID
                 hid_report_in[1] = power_button_state;
                 power_button_state = 0;
-                snprintf(b, 10, "%x", hid_report_in);
-                usb_print(b);
             } else {
                 //The buffer for normal keys is sent continuously
                 char i;
                 for(i=0;i<8;i++) //Copy key buffer
                     hid_report_in[i+1]=key_buffer[i];
                 hid_report_in[0]=1; //Set report ID
-                for(i=0; i<8; i++) {
-                    if (hid_report_in[i+1] == HID_NO_EVENT)
-                        continue;
-                    usb_print(PSTR("key: "));
-                    int j = (int)hid_report_in[i+1];
-                    snprintf(&buf, 1, "%d", j);
-                    usb_print(buf);
-                    usb_print(PSTR("\r\n"));
-                }
             }
         }
 	}
@@ -135,10 +145,28 @@ int main(void)
 //
 void usb_print(const char *s)
 {
+    LED_ON;
 	char c;
 	while (1) {
 		c = pgm_read_byte(s++);
 		if (!c) break;
 		usb_serial_putchar(c);
 	}
+    LED_OFF;
+}
+
+void dump_hid_report(unsigned char hid_report[HID_INT_IN_EP_SIZE]) {
+    char buf[6];
+    int i, j;
+
+    usb_print(PSTR("hid_report: "));
+
+    for (i = 0; i < sizeof(hid_report); i++) {
+        snprintf(buf, sizeof(buf), " 0x02X", hid_report[i]);
+        for (j = 0; j < sizeof(buf); j++) {
+            usb_serial_putchar(buf[j]);
+        }
+    }
+
+    usb_print(PSTR("\r\n"));
 }

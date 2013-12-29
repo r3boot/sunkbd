@@ -1,17 +1,17 @@
 /* UART Example for Teensy USB Development Board
  * http://www.pjrc.com/teensy/
  * Copyright (c) 2009 PJRC.COM, LLC
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -104,6 +104,14 @@ uint8_t uart_tx_busy(void) {
     return tx_buffer_head + 1;
 }
 
+void uart_dump_hex(unsigned char key) {
+    char buf[12];
+    snprintf(buf, sizeof(buf), "key: 0x%02X\r\n", (int)key);
+    for (int i=0; i < sizeof(buf); i++) {
+        usb_serial_putchar(buf[i]);
+    }
+}
+
 // Transmit Interrupt
 ISR(USART1_UDRE_vect)
 {
@@ -123,10 +131,12 @@ ISR(USART1_UDRE_vect)
 // Receive Interrupt
 ISR(USART1_RX_vect)
 {
-    char buf[32];
     unsigned char key;
 
     key = UDR1;
+
+    uart_dump_hex(key);
+    // usb_print(key);
 
     if (initialized < 3) {
         // Handle keyboard initialization codes
@@ -147,8 +157,8 @@ ISR(USART1_RX_vect)
         if (key < KEY_RELEASED) {
             usb_print(PSTR("key pressed\r\n"));
             // Key is pressed
-            // hidKey = keycode[key];
-            hidKey = key;
+            hidKey = keycode[key];
+            // hidKey = key;
 
             if (!doModifiers(hidKey) && !doMediaButtons(key)) {
                 // Handle modifier keys seperately
