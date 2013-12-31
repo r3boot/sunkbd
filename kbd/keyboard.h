@@ -3,7 +3,7 @@
 #include "kbd/sun_defs.h"
 #include "usb/extra_hid_defs.h"
 
-static unsigned char key_buffer[8]={
+static uint8_t key_buffer[6]={
     HID_NO_EVENT, HID_NO_EVENT, HID_NO_EVENT,
     HID_NO_EVENT, HID_NO_EVENT, HID_NO_EVENT,
     HID_NO_EVENT, HID_NO_EVENT

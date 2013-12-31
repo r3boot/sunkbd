@@ -2,6 +2,7 @@
 #include "kbd/keyboard.h"
 #include "kbd/sun_defs.h"
 #include "kbd/uart.h"
+#include "usb/usb_keyboard.h"
 #include "usb/extra_hid_defs.h"
 
 void updateLEDs(void) {
@@ -30,28 +31,28 @@ unsigned char doModifiers(unsigned char key) {
 	switch(key)
 	{
 		case(HID_KEY_LEFT_SHIFT):
-			key_buffer[0]^=HID_MODIFIER_LEFT_SHIFT;
+			keyboard_modifier_keys ^= HID_MODIFIER_LEFT_SHIFT;
 			break;
 		case(HID_KEY_RIGHT_SHIFT):
-			key_buffer[0]^=HID_MODIFIER_RIGHT_SHIFT;
+			keyboard_modifier_keys ^= HID_MODIFIER_RIGHT_SHIFT;
 			break;
 		case(HID_KEY_LEFT_CONTROL):
-			key_buffer[0]^=HID_MODIFIER_LEFT_CONTROL;
+			keyboard_modifier_keys ^= HID_MODIFIER_LEFT_CONTROL;
 			break;
 		case(HID_KEY_RIGHT_CONTROL):
-			key_buffer[0]^=HID_MODIFIER_RIGHT_CONTROL;
+			keyboard_modifier_keys ^= HID_MODIFIER_RIGHT_CONTROL;
 			break;
 		case(HID_KEY_LEFT_ALT):
-			key_buffer[0]^=HID_MODIFIER_LEFT_ALT;
+			keyboard_modifier_keys ^= HID_MODIFIER_LEFT_ALT;
 			break;
 		case(HID_KEY_LEFT_GUI):
-			key_buffer[0]^=HID_MODIFIER_LEFT_GUI;
+			keyboard_modifier_keys ^= HID_MODIFIER_LEFT_GUI;
 			break;
 		case(HID_KEY_RIGHT_GUI):
-			key_buffer[0]^=HID_MODIFIER_RIGHT_GUI;
+			keyboard_modifier_keys ^= HID_MODIFIER_RIGHT_GUI;
 			break;
 		case(HID_KEY_RIGHT_ALT):
-			key_buffer[0]^=HID_MODIFIER_RIGHT_ALT;
+			keyboard_modifier_keys ^= HID_MODIFIER_RIGHT_ALT;
 			break;
 		default:
 			return 0;	//No modifier key pressed

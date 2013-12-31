@@ -28,11 +28,13 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
+#include <stdio.h>
 
 #include "kbd/keyboard.h"
 #include "kbd/uart.h"
 #include "kbd/keymap.h"
-#include "usb/usb_serial.h"
+#include "usb/usb_keyboard.h"
+#include "usb/print.h"
 
 static unsigned char initialized = 0;
 
@@ -43,9 +45,9 @@ static unsigned char initialized = 0;
 static volatile uint8_t tx_buffer[TX_BUFFER_SIZE];
 static volatile uint8_t tx_buffer_head;
 static volatile uint8_t tx_buffer_tail;
-static volatile uint8_t rx_buffer[RX_BUFFER_SIZE];
-static volatile uint8_t rx_buffer_head;
-static volatile uint8_t rx_buffer_tail;
+static volatile uint8_t kbd_buffer[RX_BUFFER_SIZE];
+static volatile uint8_t kbd_buffer_head;
+static volatile uint8_t kbd_buffer_tail;
 
 // Initialize the UART
 void uart_init(uint32_t baud)
@@ -56,7 +58,7 @@ void uart_init(uint32_t baud)
 	UCSR1B = (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1);
 	UCSR1C = (1<<UCSZ11) | (1<<UCSZ10);
 	tx_buffer_head = tx_buffer_tail = 0;
-	rx_buffer_head = rx_buffer_tail = 0;
+	kbd_buffer_head = kbd_buffer_tail = 0;
 	sei();
 }
 
@@ -80,11 +82,11 @@ uint8_t uart_getc(void)
 {
         uint8_t c, i;
 
-	while (rx_buffer_head == rx_buffer_tail) ; // wait for character
-        i = rx_buffer_tail + 1;
+	while (kbd_buffer_head == kbd_buffer_tail) ; // wait for character
+        i = kbd_buffer_tail + 1;
         if (i >= RX_BUFFER_SIZE) i = 0;
-        c = rx_buffer[i];
-        rx_buffer_tail = i;
+        c = kbd_buffer[i];
+        kbd_buffer_tail = i;
         return c;
 }
 
@@ -94,22 +96,14 @@ uint8_t uart_getc(void)
 uint8_t uart_available(void) {
 	uint8_t head, tail;
 
-	head = rx_buffer_head;
-	tail = rx_buffer_tail;
+	head = kbd_buffer_head;
+	tail = kbd_buffer_tail;
 	if (head >= tail) return head - tail;
 	return RX_BUFFER_SIZE + head - tail;
 }
 
 uint8_t uart_tx_busy(void) {
     return tx_buffer_head + 1;
-}
-
-void uart_dump_hex(unsigned char key) {
-    char buf[12];
-    snprintf(buf, sizeof(buf), "key: 0x%02X\r\n", (int)key);
-    for (int i=0; i < sizeof(buf); i++) {
-        usb_serial_putchar(buf[i]);
-    }
 }
 
 // Transmit Interrupt
@@ -132,12 +126,11 @@ ISR(USART1_UDRE_vect)
 ISR(USART1_RX_vect)
 {
     unsigned char key;
+    char hexd[5];
 
     key = UDR1;
 
-    uart_dump_hex(key);
-    // usb_print(key);
-
+    /*
     if (initialized < 3) {
         // Handle keyboard initialization codes
         // In case of success, we will receive three codes.
@@ -147,60 +140,89 @@ ISR(USART1_RX_vect)
             fillKeyArray(HID_ERR_POST);
         initialized++;
     } else {
-        unsigned char hidKey;
-        if(doPowerButton(key)) {
-            usb_print(PSTR("power button\r\n"));
-            //TODO: RCSTAbits.CREN=1; //enable recv
-            return;
-        }
+    */
+    unsigned char hidKey;
+    int i;
 
-        if (key < KEY_RELEASED) {
-            usb_print(PSTR("key pressed\r\n"));
-            // Key is pressed
-            hidKey = keycode[key];
-            // hidKey = key;
-
-            if (!doModifiers(hidKey) && !doMediaButtons(key)) {
-                // Handle modifier keys seperately
-                unsigned char i;
-                for (i=HID_ARRAY_START; i<HID_ARRAY_START+HID_MAX_KEYS; i++) {
-                    // Look for a free keycode slot
-                    if (key_buffer[i]==HID_NO_EVENT) {
-                        key_buffer[i] = hidKey;
-                        break;
-                    }
-                }
-            }
-        } else if (key > KEY_RELEASED) {
-            usb_print(PSTR("key released\r\n"));
-            // Key is released
-            hidKey = keycode[RELEASETOPRESS(key)];
-            if (!doModifiers(hidKey) && !doMediaButtons(RELEASETOPRESS(key))) {
-                unsigned char i;
-                for (i=HID_ARRAY_START;i<HID_ARRAY_START+HID_MAX_KEYS;i++) {
-                    // Remove the released key from the buffer
-                    if (key_buffer[i] == hidKey) {
-                        key_buffer[i]=HID_NO_EVENT;
-                        // break;
-                        // don't break so if for some reason a key was in
-                        // the array twice (should not happen) both instances
-                        // are cleared
-                    }
-                }
-            }
-        }
+    if(doPowerButton(key)) {
+        //TODO: RCSTAbits.CREN=1; //enable recv
+        return;
     }
 
-    /*
-	uint8_t c, i;
+    if (key < KEY_RELEASED) {
+        // Key is pressed
+        hidKey = keycode[key];
 
-	c = UDR1;
-	i = rx_buffer_head + 1;
-	if (i >= RX_BUFFER_SIZE) i = 0;
-	if (i != rx_buffer_tail) {
-		rx_buffer[i] = c;
-		rx_buffer_head = i;
-	}
-    */
+        if (!doModifiers(hidKey) && !doMediaButtons(key)) {
+            print("key pressed: ");
+            phex(hidKey);
+            print("\n");
+
+            update_keyboard_buffer(hidKey);
+        }
+    } else if (key > KEY_RELEASED) {
+        // Key is released
+        hidKey = keycode[key - (KEY_RELEASED+1)];
+
+        if (!doModifiers(hidKey) && !doMediaButtons(RELEASETOPRESS(key))) {
+            print("key released: ");
+            phex(hidKey);
+            print("\n");
+
+            remove_keyboard_buffer(hidKey);
+        }
+    }
+    //}
+
 }
 
+void update_keyboard_buffer(unsigned char key) {
+    unsigned char i;
+    for(i=0; i<=KEYBOARD_KEYS_MAX; i++) {
+        if (keyboard_keys[i] == HID_NO_EVENT) {
+            keyboard_keys[i] = key;
+            return;
+        }
+    }
+    print("keyboard_keys overflow\n");
+}
+
+void remove_keyboard_buffer(unsigned char key) {
+    unsigned char i;
+    for(i=0; i<=KEYBOARD_KEYS_MAX; i++) {
+        if (keyboard_keys[i] == key) {
+            keyboard_keys[i] = HID_NO_EVENT;
+            return;
+        }
+    }
+    print("failed to remove keyboard key\n");
+    for(i=0; i<=KEYBOARD_KEYS_MAX; i++)
+        keyboard_keys[i] = HID_NO_EVENT;
+}
+
+void update_kbd_buffer(unsigned char key) {
+    int i;
+
+	i = kbd_buffer_head + 1;
+	if (i >= RX_BUFFER_SIZE) i = 0;
+	if (i != kbd_buffer_tail) {
+		kbd_buffer[i] = key;
+		kbd_buffer_head = i;
+	}
+}
+
+uint8_t kbd_buffer_getc() {
+    unsigned char key;
+    int i;
+
+	if (kbd_buffer_head == kbd_buffer_tail) {
+        return 0;
+	} else {
+		i = kbd_buffer_tail + 1;
+		if (i >= RX_BUFFER_SIZE) i = 0;
+        key = kbd_buffer[i];
+		kbd_buffer_tail = i;
+        return key;
+	}
+    return 0;
+}
