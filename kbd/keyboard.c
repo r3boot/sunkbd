@@ -1,8 +1,10 @@
 
 #include "kbd/keyboard.h"
 #include "kbd/sun_defs.h"
+#include "kbd/keymap.h"
 #include "kbd/uart.h"
 #include "usb/usb_keyboard.h"
+#include "usb/print.h"
 #include "usb/extra_hid_defs.h"
 
 uint8_t led_state = 0;
@@ -30,6 +32,55 @@ void toggle_click(void) {
     }
 }
 
+uint8_t update_keyboard_keys (uint8_t key) {
+    uint8_t i;
+
+    if (key == SUN_RESPONSE_IDLE) {
+        // No keys have been pressed, clear buffers
+
+        for(i=0; i<KEYBOARD_KEYS_MAX; i++) {
+            if (keyboard_keys[i] == key) {
+                keyboard_keys[i] = HID_NO_EVENT;
+            }
+        }
+
+        keyboard_modifier_keys = 0;
+        transmit_keyboard_buffer();
+        return 1;
+
+    } else if (key < SUN_KEY_RELEASED) {
+        // Key has been pressed
+        key = keycode[key];
+
+        if ((!is_modifier_button(key)) && (!is_media_button(key))) {
+            for(i=0; i<KEYBOARD_KEYS_MAX; i++) {
+                if (keyboard_keys[i] == HID_NO_EVENT) {
+                    keyboard_keys[i] = key;
+                    break;
+                }
+            }
+        }
+        return 1;
+
+    } else if (key > SUN_KEY_RELEASED) {
+        // Key has been released
+        key = keycode[RELEASETOPRESS(key)];
+
+        if (!is_modifier_button(key)) {
+            for(i=0; i<KEYBOARD_KEYS_MAX; i++) {
+                if (keyboard_keys[i] == key) {
+                    keyboard_keys[i] = HID_NO_EVENT;
+                    break;
+                }
+            }
+        }
+        return 1;
+
+    }
+
+    return 0;
+}
+
 void updateLEDs(void) {
     static unsigned char temp;
 
@@ -44,7 +95,7 @@ void updateLEDs(void) {
     while(uart_tx_busy());
 }
 
-unsigned char doModifiers(unsigned char key) {
+uint8_t is_modifier_button (uint8_t key) {
 	//Convert HID keycodes to HID modifiers (kept in the first byte of the output buffer).
 	//Operates on HID codes so various keyboard keys can be remapped (swap meta/alt, etc.)
 	//Returns 1 if a modifier was applied so the key isn't added to the pressed key list.
@@ -80,25 +131,28 @@ unsigned char doModifiers(unsigned char key) {
 	return 1;
 }
 
-unsigned char doMediaButtons(unsigned char key) {
-	//If the key pressed or released was a media key, update the media key report and return 1 (so the key isn't added to the pressed key list)
+uint8_t is_media_button (uint8_t key) {
+	//If the key pressed or released was a media key, update the media key
+    //report and return 1 (so the key isn't added to the pressed key list)
 	switch(key)
 	{
 		case (SUN_KEY_VOL_UP):
-			// media_button_state ^= 0b00000001;
+            print("volume up\n");
+            update_keyboard_keys(HID_KEY_VOL_UP);
 			break;
 		case (SUN_KEY_VOL_DOWN):
-			// media_button_state ^= 0b00000010;
+            print("volume down\n");
+            update_keyboard_keys(HID_KEY_VOL_DOWN);
 			break;
 		case (SUN_KEY_VOL_MUTE):
-			// media_button_state ^= 0b00000100;
+            print("volume mute\n");
+            update_keyboard_keys(HID_KEY_VOL_MUTE);
 			break;
 		default:
 			return 0;
 
 	}
-	// mediaButtonsChanged = 1;
-	return 1;
+	return 0;
 }
 
 unsigned char doPowerButton(unsigned char key) {

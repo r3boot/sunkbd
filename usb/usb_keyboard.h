@@ -14,10 +14,14 @@ extern volatile uint8_t keyboard_leds;
 
 int8_t usb_debug_putchar(uint8_t c);	// transmit a character
 void usb_debug_flush_output(void);	// immediately transmit any buffered output
+uint8_t keys_pressed (void);            // check if there is a key in the
+                                        // keyboard buffer
+uint8_t key_slot_available (void);      // check if there's a keyslot available
+void transmit_keyboard_buffer(void);    // transmit the keyboard buffer to pc
 
 #define USB_DEBUG_HID
 
-#define KEYBOARD_KEYS_MAX   5
+#define KEYBOARD_KEYS_MAX   6
 
 #define KEY_CTRL	0x01
 #define KEY_SHIFT	0x02

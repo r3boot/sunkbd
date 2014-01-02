@@ -10,6 +10,7 @@
 
 void updateLEDs(void);
 void fillKeyArray(unsigned char val);
-unsigned char doModifiers(unsigned char key);
-unsigned char doMediaButtons(unsigned char key);
+uint8_t update_keyboard_keys (uint8_t key);
+uint8_t is_modifier_button(uint8_t key);
+uint8_t is_media_button(uint8_t key);
 unsigned char doPowerButton(unsigned char key);

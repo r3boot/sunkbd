@@ -24,8 +24,12 @@
 // Version 1.0: Initial Release
 // Version 1.1: Add support for Teensy 2.0
 
+#include <util/delay.h>
+
 #define USB_SERIAL_PRIVATE_INCLUDE
-#include "usb_keyboard.h"
+#include "usb/usb_keyboard.h"
+#include "usb/extra_hid_defs.h"
+#include "usb/print.h"
 
 /**************************************************************************
  *
@@ -378,7 +382,7 @@ int8_t usb_keyboard_send(void)
 	}
 	UEDATX = keyboard_modifier_keys;
 	UEDATX = 0;
-	for (i=0; i<6; i++) {
+	for (i=0; i<KEYBOARD_KEYS_MAX; i++) {
 		UEDATX = keyboard_keys[i];
 	}
 	UEINTX = 0x3A;
@@ -747,4 +751,52 @@ ISR(USB_COM_vect)
 	UECONX = (1<<STALLRQ) | (1<<EPEN);	// stall
 }
 
+void dump_keys (void) {
+    uint8_t i;
 
+    print("keys: ");
+    for (i=0; i<KEYBOARD_KEYS_MAX; i++) {
+        print(" ");
+        phex(keyboard_keys[i]);
+    }
+    print("; modifiers: ");
+    phex(keyboard_modifier_keys);
+    print("\n");
+}
+
+uint8_t keys_pressed (void) {
+    uint8_t i;
+
+    for(i=0; i<KEYBOARD_KEYS_MAX; i++) {
+        if (keyboard_keys[i] != HID_NO_EVENT) {
+            return 1;
+        }
+    }
+
+    if (keyboard_modifier_keys) {
+        return 1;
+    }
+
+    return 0;
+}
+
+uint8_t key_slot_available (void) {
+    uint8_t i;
+
+    for (i=0; i < KEYBOARD_KEYS_MAX; i++) {
+        if (keyboard_keys[i] == HID_NO_EVENT)
+            return 1;
+    }
+
+    return 0;
+}
+
+void transmit_keyboard_buffer (void) {
+    uint8_t i;
+
+    if (keys_pressed())
+        dump_keys();
+
+    usb_keyboard_send();
+    _delay_ms(50);
+}

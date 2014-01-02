@@ -24,7 +24,7 @@ HID_KEY_RIGHT_CONTROL,	// Alt Graph
 0x40,	// F7
 0x41,	// F8
 0x42,	// F9
-HID_KEY_LEFT_GUI,	// Alt
+HID_KEY_LEFT_ALT,	// Alt
 0x52,	// Arrow up
 0x48,	// Pause
 0x46,	// Print Screen/Sysrq
@@ -125,7 +125,7 @@ HID_KEY_F23,	// Cut (mapped as F23)
 0,		// undefined
 0x68,	// Help (mapped to F13)
 0x39,	// Caps Lock
-HID_KEY_LEFT_ALT,	// Left Meta (HID specs: left GUI)
+HID_KEY_LEFT_GUI,	// Left Meta (HID specs: left GUI)
 0x2C,	// Space
 HID_KEY_RIGHT_ALT,	// Right Meta (HID specs: right GUI)
 0x4E,	// Page down

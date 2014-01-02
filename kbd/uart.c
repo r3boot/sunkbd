@@ -65,19 +65,23 @@ void uart_putc(uint8_t c) {
 
 	i = tx_buffer_head + 1;
 	if (i >= TX_BUFFER_SIZE) i = 0;
-	while (tx_buffer_tail == i) ; // wait until space in buffer
-	//cli();
+	while (tx_buffer_tail == i);
 	tx_buffer[i] = c;
 	tx_buffer_head = i;
+    print("Enabling transmit interrupt\n");
 	UCSR1B = (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1) | (1<<UDRIE1);
-	//sei();
 }
 
 // Receive a byte
 uint8_t uart_getc(void) {
     uint8_t c, i;
 
-	while (rx_buffer_head == rx_buffer_tail) ; // wait for character
+    if (rx_buffer_head == rx_buffer_tail) {
+        print("rx_buffer is empty\n");
+        return 0;
+    }
+
+	// while (rx_buffer_head == rx_buffer_tail) ; // wait for character
 
     i = rx_buffer_tail + 1;
     if (i >= RX_BUFFER_SIZE) i = 0;
@@ -94,8 +98,23 @@ uint8_t uart_available(void) {
 
 	head = rx_buffer_head;
 	tail = rx_buffer_tail;
-	if (head >= tail) return head - tail;
-	return RX_BUFFER_SIZE + head - tail;
+
+    if (head > tail) {
+        print("uart_available: head=");
+        phex(head);
+        print("; tail=");
+        phex(tail);
+        print("; head-tail=");
+        phex(head - tail);
+        print("; avail=");
+        phex(RX_BUFFER_SIZE + head - tail);
+        print("\n");
+    }
+
+    return head - tail;
+
+    // print("fallback\n");
+	// return RX_BUFFER_SIZE + head - tail;
 }
 
 uint8_t uart_tx_busy(void) {
@@ -108,6 +127,7 @@ ISR(USART1_UDRE_vect) {
 
 	if (tx_buffer_head == tx_buffer_tail) {
 		// buffer is empty, disable transmit interrupt
+        print("Disabling transmit interrupt\n");
 		UCSR1B = (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1);
 	} else {
 		i = tx_buffer_tail + 1;
@@ -122,75 +142,24 @@ ISR(USART1_RX_vect) {
     uint8_t c, i;
 
     c = UDR1;
+
+    if ((c == SUN_KEY_LEFT_META) || (RELEASETOPRESS(c) == SUN_KEY_LEFT_META))
+        // TODO: l_alt+l_meta sent both at the same time
+        return;
+
     i = rx_buffer_head + 1;
     if (i >= RX_BUFFER_SIZE) i = 0;
     if (i != rx_buffer_tail) {
+        if (c != SUN_RESPONSE_IDLE) {
+            print("add to rx_buffer: ");
+            phex(c);
+            print(" / ");
+            phex(keycode[c]);
+            print(" / ");
+            phex(keycode[RELEASETOPRESS(c)]);
+            print("\n");
+        }
         rx_buffer[i] = c;
         rx_buffer_head = i;
     }
-
-    /*
-    unsigned char key;
-
-    key = UDR1;
-
-    unsigned char hidKey;
-
-    if(doPowerButton(key)) {
-        //TODO: RCSTAbits.CREN=1; //enable recv
-        return;
-    }
-
-    if (key < SUN_KEY_RELEASED) {
-        // Key is pressed
-        hidKey = keycode[key];
-
-        if (!doModifiers(hidKey) && !doMediaButtons(key)) {
-            print("key pressed: ");
-            phex(hidKey);
-            print("\n");
-
-            update_keyboard_buffer(hidKey);
-        }
-    } else if (key > SUN_KEY_RELEASED) {
-        // Key is released
-        hidKey = keycode[RELEASETOPRESS(key)];
-
-        if (!doModifiers(hidKey) && !doMediaButtons(RELEASETOPRESS(key))) {
-            print("key released: ");
-            phex(hidKey);
-            print("\n");
-
-            remove_keyboard_buffer(hidKey);
-        }
-    }
-    */
-}
-
-void update_keyboard_buffer(unsigned char key) {
-    unsigned char i;
-    cli();
-    for(i=0; i<=KEYBOARD_KEYS_MAX; i++) {
-        if (keyboard_keys[i] == HID_NO_EVENT) {
-            keyboard_keys[i] = key;
-            return;
-        }
-    }
-    sei();
-    print("keyboard_keys overflow\n");
-}
-
-void remove_keyboard_buffer(unsigned char key) {
-    unsigned char i;
-    cli();
-    for(i=0; i<=KEYBOARD_KEYS_MAX; i++) {
-        if (keyboard_keys[i] == key) {
-            keyboard_keys[i] = HID_NO_EVENT;
-            return;
-        }
-    }
-    print("failed to remove keyboard key\n");
-    for(i=0; i<=KEYBOARD_KEYS_MAX; i++)
-        keyboard_keys[i] = HID_NO_EVENT;
-    sei();
 }

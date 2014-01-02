@@ -30,6 +30,7 @@
 #include "usb/usb_config.h"
 #include "usb/print.h"
 #include "kbd/keyboard.h"
+#include "kbd/keymap.h"
 
 #define LED_CONFIG	(DDRD |= (1<<6))
 #define LED_ON		(PORTD |= (1<<6))
@@ -66,68 +67,13 @@ void device_init(void) {
 
     // initialize the keyboard uart
     uart_init(1200);
-    // uart_putc(COMMAND_RESET);
+    // uart_putc(SUN_COMMAND_RESET);
 
     // Finally, display an initialization version and turn off the led
     print("Sun Type 3/4/5 USB Keyboard converter initialized\n");
     LED_OFF;
 }
 
-uint8_t update_keyboard_keys (uint8_t key) {
-    uint8_t i;
-
-    if (key < SUN_KEY_RELEASED) {
-        // Key has been pressed
-
-        for(i=0; i<=KEYBOARD_KEYS_MAX; i++) {
-            if (keyboard_keys[i] == HID_NO_EVENT) {
-                keyboard_keys[i] = key;
-                return 1;
-            }
-        }
-
-    } else if (key > SUN_KEY_RELEASED) {
-        // Key has been released
-        key = RELEASETOPRESS(key);
-
-        for(i=0; i<=KEYBOARD_KEYS_MAX; i++) {
-            if (keyboard_keys[i] == key) {
-                keyboard_keys[i] = HID_NO_EVENT;
-                return 1;
-            }
-        }
-
-    }
-
-    return 0;
-}
-
-uint8_t keys_pressed (void) {
-    uint8_t i;
-
-    for(i=0; i<=KEYBOARD_KEYS_MAX; i++) {
-        if (keyboard_keys[i] != HID_NO_EVENT) {
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
-void dump_keyboard_keys (void) {
-    uint8_t i;
-
-    print("keyboard_keys: ");
-    for (i=0; i<KEYBOARD_KEYS_MAX+1; i++) {
-        print(" ");
-        phex(keyboard_keys[i]);
-    }
-    print("\n");
-
-    print("keyboard_modifier_keys: ");
-    phex(keyboard_modifier_keys);
-    print("\n");
-}
 // Basic command interpreter for controlling port pins
 int main (void) {
 	uint8_t c, transmit_keys;
@@ -137,30 +83,40 @@ int main (void) {
     transmit_keys = 0;
 	while (1) {
 
-        if (uart_available()) {
+        // while (!uart_available());
+        if ((key_slot_available()) && (uart_available())) {
+
+            print("retrieving scancode\n");
             c = uart_getc();
+
+            if (!c) {
+                break;
+            }
+
             if (!update_keyboard_keys(c)) {
-                print("failed to add key to keyboard_keys: ");
+                print("failed to update keyboard_keys: ");
                 phex(c);
                 print("\n");
             }
         }
 
+        if (keys_pressed()) LED_ON;
+
+        transmit_keyboard_buffer();
+
+        if (keys_pressed()) LED_OFF;
+
+        /*
         if (keys_pressed())
             transmit_keys = 1;
 
         if (transmit_keys) {
             LED_ON;
-
-            dump_keyboard_keys();
-
-            usb_keyboard_send();
-
-            _delay_ms(50);
-
+            transmit_keyboard_buffer();
             transmit_keys = 0;
             LED_OFF;
         }
+        */
 
 	}
 }
