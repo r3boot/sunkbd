@@ -5,6 +5,31 @@
 #include "usb/usb_keyboard.h"
 #include "usb/extra_hid_defs.h"
 
+uint8_t led_state = 0;
+uint8_t bell_enabled = 0;
+uint8_t click_enabled = 0;
+
+void toggle_bell(void) {
+    if (bell_enabled) {
+        uart_putc(SUN_COMMAND_BELL_OFF);
+        bell_enabled = 0;
+    } else {
+        uart_putc(SUN_COMMAND_BELL_ON);
+        bell_enabled = 1;
+    }
+
+}
+
+void toggle_click(void) {
+    if (click_enabled) {
+        uart_putc(SUN_COMMAND_CLICK_OFF);
+        click_enabled = 0;
+    } else {
+        uart_putc(SUN_COMMAND_CLICK_ON);
+        click_enabled = 1;
+    }
+}
+
 void updateLEDs(void) {
     static unsigned char temp;
 
@@ -12,16 +37,11 @@ void updateLEDs(void) {
     //TODO: temp = (CtrlTrfData[1]&(0b0101)) | ((CtrlTrfData[1]&0b1000)>>3) | ((CtrlTrfData[1]&0b0010)<<2);
 
     //Send LED states to keyboard
-    uart_putc(COMMAND_LEDS);
+    uart_putc(SUN_COMMAND_LEDS);
     while(uart_tx_busy());
-    uart_putc(temp);
-}
 
-void fillKeyArray(unsigned char val) {
-    //Fill the key array with val
-    unsigned char i;
-    for(i=HID_ARRAY_START;i<HID_ARRAY_START+HID_MAX_KEYS;i++)
-        key_buffer[i]=val;
+    uart_putc(temp);
+    while(uart_tx_busy());
 }
 
 unsigned char doModifiers(unsigned char key) {
@@ -64,20 +84,20 @@ unsigned char doMediaButtons(unsigned char key) {
 	//If the key pressed or released was a media key, update the media key report and return 1 (so the key isn't added to the pressed key list)
 	switch(key)
 	{
-		case (KEY_VOL_UP):
-			media_button_state ^= 0b00000001;
+		case (SUN_KEY_VOL_UP):
+			// media_button_state ^= 0b00000001;
 			break;
-		case (KEY_VOL_DOWN):
-			media_button_state ^= 0b00000010;
+		case (SUN_KEY_VOL_DOWN):
+			// media_button_state ^= 0b00000010;
 			break;
-		case (KEY_VOL_MUTE):
-			media_button_state ^= 0b00000100;
+		case (SUN_KEY_VOL_MUTE):
+			// media_button_state ^= 0b00000100;
 			break;
 		default:
 			return 0;
 
 	}
-	mediaButtonsChanged = 1;
+	// mediaButtonsChanged = 1;
 	return 1;
 }
 
@@ -85,10 +105,14 @@ unsigned char doPowerButton(unsigned char key) {
 	//Sets power management report info
 	//Only reacts to key press, not release
 	//Returns 1 if key was power button, so key isn't converted to HID code
-	if(key==KEY_POWER)
+	if (key == SUN_KEY_POWER)
 	{
-		power_button_state = 0b00000001;
+		// power_button_state = 0b00000001;
 		return 1;
 	}
 	return 0;
+}
+
+uint8_t doLedButtons(unsigned char key) {
+    return 0;
 }

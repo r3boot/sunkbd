@@ -50,10 +50,6 @@ void device_init(void) {
 	LED_CONFIG;
     LED_ON;
 
-    // initialize the keyboard uart
-    uart_init(1200);
-    uart_putc(COMMAND_RESET);
-
     // Use USB raw-hid to transfer scancodes from the keyboard
     usb_init();
     while (!usb_configured()) /* wait */ ;
@@ -68,59 +64,103 @@ void device_init(void) {
     TCCR0B = 0x05;
     TIMSK0 = (1<<TOIE0); */
 
-    LED_OFF;
+    // initialize the keyboard uart
+    uart_init(1200);
+    // uart_putc(COMMAND_RESET);
+
+    // Finally, display an initialization version and turn off the led
     print("Sun Type 3/4/5 USB Keyboard converter initialized\n");
+    LED_OFF;
 }
 
+uint8_t update_keyboard_keys (uint8_t key) {
+    uint8_t i;
+
+    if (key < SUN_KEY_RELEASED) {
+        // Key has been pressed
+
+        for(i=0; i<=KEYBOARD_KEYS_MAX; i++) {
+            if (keyboard_keys[i] == HID_NO_EVENT) {
+                keyboard_keys[i] = key;
+                return 1;
+            }
+        }
+
+    } else if (key > SUN_KEY_RELEASED) {
+        // Key has been released
+        key = RELEASETOPRESS(key);
+
+        for(i=0; i<=KEYBOARD_KEYS_MAX; i++) {
+            if (keyboard_keys[i] == key) {
+                keyboard_keys[i] = HID_NO_EVENT;
+                return 1;
+            }
+        }
+
+    }
+
+    return 0;
+}
+
+uint8_t keys_pressed (void) {
+    uint8_t i;
+
+    for(i=0; i<=KEYBOARD_KEYS_MAX; i++) {
+        if (keyboard_keys[i] != HID_NO_EVENT) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+void dump_keyboard_keys (void) {
+    uint8_t i;
+
+    print("keyboard_keys: ");
+    for (i=0; i<KEYBOARD_KEYS_MAX+1; i++) {
+        print(" ");
+        phex(keyboard_keys[i]);
+    }
+    print("\n");
+
+    print("keyboard_modifier_keys: ");
+    phex(keyboard_modifier_keys);
+    print("\n");
+}
 // Basic command interpreter for controlling port pins
-int main(void) {
-	char buf[32];
-    char key, i;
-	uint8_t n, keys_pressed;
+int main (void) {
+	uint8_t c, transmit_keys;
 
     device_init();
 
+    transmit_keys = 0;
 	while (1) {
 
-        if (mediaButtonsChanged) {
-            // Media keys need to be sent once when they're pressed,
-            // and again when they're released
-            hid_report_in[0]=2; //Set report ID
-            hid_report_in[1]=media_button_state;
-            mediaButtonsChanged=0;
-        } else if (power_button_state) {
-            // Power button is sent if it's been pressed, releasing /
-            // holding it is ignored: its status is reset instantly
-            hid_report_in[0]=3; //Set report ID
-            hid_report_in[1] = power_button_state;
-            power_button_state = 0;
-        } else {
-            //The buffer for normal keys is sent continuously
-            for(i=0; i<6; i++) //Copy key buffer
-                hid_report_in[i+1]=key_buffer[i];
-            hid_report_in[0]=1; //Set report ID
-        }
-
-        cli();
-        print("keyboard_keys: ");
-        for (i=0; i<KEYBOARD_KEYS_MAX+1; i++) {
-            print(" ");
-            phex(keyboard_keys[i]);
-        }
-        print("\n");
-
-        print("keyboard_modifier_keys: ");
-        phex(keyboard_modifier_keys);
-        print("\n");
-
-        usb_keyboard_send();
-
-        for (i=0; i<KEYBOARD_KEYS_MAX+1; i++) {
-            if (keyboard_keys[i] != HID_NO_EVENT) {
-                _delay_ms(50);
-                break;
+        if (uart_available()) {
+            c = uart_getc();
+            if (!update_keyboard_keys(c)) {
+                print("failed to add key to keyboard_keys: ");
+                phex(c);
+                print("\n");
             }
         }
-        sei();
+
+        if (keys_pressed())
+            transmit_keys = 1;
+
+        if (transmit_keys) {
+            LED_ON;
+
+            dump_keyboard_keys();
+
+            usb_keyboard_send();
+
+            _delay_ms(50);
+
+            transmit_keys = 0;
+            LED_OFF;
+        }
+
 	}
 }

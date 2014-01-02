@@ -3,15 +3,10 @@
 #include "kbd/sun_defs.h"
 #include "usb/extra_hid_defs.h"
 
-static uint8_t key_buffer[6]={
-    HID_NO_EVENT, HID_NO_EVENT, HID_NO_EVENT,
-    HID_NO_EVENT, HID_NO_EVENT, HID_NO_EVENT,
-    HID_NO_EVENT, HID_NO_EVENT
-};
-
-static unsigned char media_button_state=0;
-static unsigned char mediaButtonsChanged=0;
-static unsigned char power_button_state=0;
+#define POS_NUM_LOCK    0x01
+#define POS_CAPS_LOCK   0x02
+#define POS_SCROLL_LOCK 0x04
+#define POS_COMPOSE     0x08
 
 void updateLEDs(void);
 void fillKeyArray(unsigned char val);
