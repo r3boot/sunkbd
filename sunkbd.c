@@ -85,7 +85,6 @@ int main (void) {
         // while (!uart_available());
         while (key_slot_available()) {
             if (uart_available()) {
-                print("retrieving scancode\n");
                 c = uart_getc();
 
                 if (!c) {

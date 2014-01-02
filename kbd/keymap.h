@@ -4,7 +4,7 @@
 #include "usb/extra_hid_defs.h"
 #include "kbd/sun_defs.h"
 
-static const unsigned char keycode[]={
+static const uint8_t keycode[]={
 0,		// undefined
 HID_KEY_F14,	// Stop (mapped to F14)
 0x81,	// Volume down

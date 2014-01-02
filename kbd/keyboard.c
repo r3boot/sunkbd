@@ -33,7 +33,7 @@ void toggle_click(void) {
 }
 
 uint8_t update_keyboard_keys (uint8_t key) {
-    uint8_t i;
+    uint8_t i, hid_key;
 
     if (key == SUN_RESPONSE_IDLE) {
         // No keys have been pressed, clear buffers
@@ -50,12 +50,12 @@ uint8_t update_keyboard_keys (uint8_t key) {
 
     } else if (key < SUN_KEY_RELEASED) {
         // Key has been pressed
-        key = keycode[key];
+        hid_key = keycode[key];
 
-        if ((!is_modifier_button(key)) && (!is_media_button(key))) {
+        if ((!is_modifier_button(hid_key)) && (!is_media_button(key))) {
             for(i=0; i<KEYBOARD_KEYS_MAX; i++) {
                 if (keyboard_keys[i] == HID_NO_EVENT) {
-                    keyboard_keys[i] = key;
+                    keyboard_keys[i] = hid_key;
                     break;
                 }
             }
@@ -64,11 +64,11 @@ uint8_t update_keyboard_keys (uint8_t key) {
 
     } else if (key > SUN_KEY_RELEASED) {
         // Key has been released
-        key = keycode[RELEASETOPRESS(key)];
+        hid_key = keycode[RELEASETOPRESS(key)];
 
-        if (!is_modifier_button(key)) {
+        if ((!is_modifier_button(hid_key)) && (!is_media_button(key))) {
             for(i=0; i<KEYBOARD_KEYS_MAX; i++) {
-                if (keyboard_keys[i] == key) {
+                if (keyboard_keys[i] == hid_key) {
                     keyboard_keys[i] = HID_NO_EVENT;
                     break;
                 }
@@ -134,20 +134,24 @@ uint8_t is_modifier_button (uint8_t key) {
 uint8_t is_media_button (uint8_t key) {
 	//If the key pressed or released was a media key, update the media key
     //report and return 1 (so the key isn't added to the pressed key list)
+
     /*
-	switch(key)
+    switch(key)
 	{
 		case (SUN_KEY_VOL_UP):
             print("volume up\n");
-            update_keyboard_keys(HID_KEY_VOL_UP);
+            if (!update_keyboard_keys(HID_KEY_VOL_UP))
+                print("failed to update keyboard_keys for volume up\n");
 			break;
 		case (SUN_KEY_VOL_DOWN):
             print("volume down\n");
-            update_keyboard_keys(HID_KEY_VOL_DOWN);
+            if (!update_keyboard_keys(HID_KEY_VOL_DOWN))
+                print("failed to update keyboard_keys for volume up\n");
 			break;
 		case (SUN_KEY_VOL_MUTE):
             print("volume mute\n");
-            update_keyboard_keys(HID_KEY_VOL_MUTE);
+            if (!update_keyboard_keys(HID_KEY_VOL_MUTE))
+                print("failed to update keyboard_keys for volume up\n");
 			break;
 		default:
 			return 0;

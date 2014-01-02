@@ -39,7 +39,7 @@
 #define HID_KEY_APP 0x65
 #define HID_KEY_VOL_UP 0x80
 #define HID_KEY_VOL_DOWN 0x81
-#define HID_KEY_VOL_MUTE 0x7F
+#define HID_KEY_VOL_MUTE 0x79
 #define HID_KEY_POWER 0x66
 
 #define HID_KEY_HELP 0x75

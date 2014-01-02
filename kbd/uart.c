@@ -94,29 +94,7 @@ uint8_t uart_getc(void) {
 // Call this before uart_getchar() to check if it will need
 // to wait for a byte to arrive.
 uint8_t uart_available(void) {
-    /*
-	uint8_t head, tail;
-
-	head = rx_buffer_head;
-	tail = rx_buffer_tail;
-
-    if (head > tail) {
-        print("uart_available: head=");
-        phex(head);
-        print("; tail=");
-        phex(tail);
-        print("; head-tail=");
-        phex(head - tail);
-        print("; avail=");
-        phex(RX_BUFFER_SIZE + head - tail);
-        print("\n");
-    }
-    */
-
     return rx_buffer_head -  rx_buffer_tail;
-
-    // print("fallback\n");
-	// return RX_BUFFER_SIZE + head - tail;
 }
 
 uint8_t uart_tx_busy(void) {
@@ -153,11 +131,11 @@ ISR(USART1_RX_vect) {
     if (i >= RX_BUFFER_SIZE) i = 0;
     if (i != rx_buffer_tail) {
         if (c != SUN_RESPONSE_IDLE) {
-            print("add to rx_buffer: ");
+            print("add to rx_buffer: sun=");
             phex(c);
-            print(" / ");
+            print("; hid=");
             phex(keycode[c]);
-            print(" / ");
+            print("; release=");
             phex(keycode[RELEASETOPRESS(c)]);
             print("\n");
         }
