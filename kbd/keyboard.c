@@ -134,6 +134,7 @@ uint8_t is_modifier_button (uint8_t key) {
 uint8_t is_media_button (uint8_t key) {
 	//If the key pressed or released was a media key, update the media key
     //report and return 1 (so the key isn't added to the pressed key list)
+    /*
 	switch(key)
 	{
 		case (SUN_KEY_VOL_UP):
@@ -152,6 +153,7 @@ uint8_t is_media_button (uint8_t key) {
 			return 0;
 
 	}
+    */
 	return 0;
 }
 

@@ -94,6 +94,7 @@ uint8_t uart_getc(void) {
 // Call this before uart_getchar() to check if it will need
 // to wait for a byte to arrive.
 uint8_t uart_available(void) {
+    /*
 	uint8_t head, tail;
 
 	head = rx_buffer_head;
@@ -110,8 +111,9 @@ uint8_t uart_available(void) {
         phex(RX_BUFFER_SIZE + head - tail);
         print("\n");
     }
+    */
 
-    return head - tail;
+    return rx_buffer_head -  rx_buffer_tail;
 
     // print("fallback\n");
 	// return RX_BUFFER_SIZE + head - tail;

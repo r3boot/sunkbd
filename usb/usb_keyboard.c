@@ -792,11 +792,11 @@ uint8_t key_slot_available (void) {
 }
 
 void transmit_keyboard_buffer (void) {
-    uint8_t i;
-
     if (keys_pressed())
         dump_keys();
 
     usb_keyboard_send();
-    _delay_ms(50);
+
+    if (keys_pressed())
+        _delay_ms(50);
 }

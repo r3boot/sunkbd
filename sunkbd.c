@@ -76,27 +76,29 @@ void device_init(void) {
 
 // Basic command interpreter for controlling port pins
 int main (void) {
-	uint8_t c, transmit_keys;
+	uint8_t c;
 
     device_init();
 
-    transmit_keys = 0;
 	while (1) {
 
         // while (!uart_available());
-        if ((key_slot_available()) && (uart_available())) {
+        while (key_slot_available()) {
+            if (uart_available()) {
+                print("retrieving scancode\n");
+                c = uart_getc();
 
-            print("retrieving scancode\n");
-            c = uart_getc();
+                if (!c) {
+                    break;
+                }
 
-            if (!c) {
+                if (!update_keyboard_keys(c)) {
+                    print("failed to update keyboard_keys: ");
+                    phex(c);
+                    print("\n");
+                }
+            } else {
                 break;
-            }
-
-            if (!update_keyboard_keys(c)) {
-                print("failed to update keyboard_keys: ");
-                phex(c);
-                print("\n");
             }
         }
 
@@ -105,18 +107,6 @@ int main (void) {
         transmit_keyboard_buffer();
 
         if (keys_pressed()) LED_OFF;
-
-        /*
-        if (keys_pressed())
-            transmit_keys = 1;
-
-        if (transmit_keys) {
-            LED_ON;
-            transmit_keyboard_buffer();
-            transmit_keys = 0;
-            LED_OFF;
-        }
-        */
 
 	}
 }
