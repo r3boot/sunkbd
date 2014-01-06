@@ -37,22 +37,24 @@
 
 
 #define HID_KEY_APP 0x65
-#define HID_KEY_VOL_UP 0x80
-#define HID_KEY_VOL_DOWN 0x81
-#define HID_KEY_VOL_MUTE 0x79
-#define HID_KEY_POWER 0x66
+#define HID_KEY_VOL_UP          0x80
+#define HID_KEY_VOL_DOWN        0x81
+#define HID_KEY_VOL_MUTE        0x7F
+#define HID_KEY_POWER           0x66
 
-#define HID_KEY_HELP 0x75
-#define HID_KEY_MENU 0x76
-#define HID_KEY_STOP 0x78
-#define HID_KEY_AGAIN 0x79
-#define HID_KEY_UNDO 0x7A
-#define HID_KEY_SELECT 0x77
-#define HID_KEY_COPY 0x7C
-#define HID_KEY_EXECUTE 0x74
-#define HID_KEY_PASTE 0x7D
-#define HID_KEY_FIND 0x7E
-#define HID_KEY_CUT 0x7B
+#define HID_KEY_HELP            0x7D
+#define HID_KEY_PROP            0x20
+#define HID_KEY_STOP            0x08
+#define HID_KEY_AGAIN           0x0A
+#define HID_KEY_UNDO            0x21
+#define HID_KEY_SELECT          0x77    // TODO
+#define HID_KEY_COPY            0x3A
+#define HID_KEY_EXECUTE         0x74    // TODO
+#define HID_KEY_PASTE           0x50
+#define HID_KEY_FIND            0x66
+#define HID_KEY_CUT             0x68
+#define HID_KEY_FRONT           0x38
+#define HID_KEY_OPEN            0x4F
 
 #define HID_KEY_F13 0x68
 #define HID_KEY_F14 0x69

@@ -40,9 +40,8 @@
 // You can change these to give your code its own name.
 // #define STR_MANUFACTURER	L"AS65342"
 // #define STR_PRODUCT		L"Sun Type 3/4/5 USB keyboard converter"
-#define STR_MANUFACTURER    L"Sun"
-#define STR_PRODUCT         L"Type 6/7 USB"
-
+#define STR_MANUFACTURER    L"Sun Microsystems, Inc."
+#define STR_PRODUCT         L"Type 6 Keyboard"
 
 // Mac OS-X and Linux automatically load the correct drivers.  On
 // Windows, even though the driver is supplied by Microsoft, an

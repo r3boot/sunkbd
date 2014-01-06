@@ -10,6 +10,7 @@
 uint8_t led_state = 0;
 uint8_t bell_enabled = 0;
 uint8_t click_enabled = 0;
+uint8_t media_button_state = 0;
 
 void toggle_bell(void) {
     if (bell_enabled) {
@@ -30,6 +31,36 @@ void toggle_click(void) {
         uart_putc(SUN_COMMAND_CLICK_ON);
         click_enabled = 1;
     }
+}
+
+uint8_t add_to_keybuffer(uint8_t key) {
+    int i;
+
+    for(i=0; i<KEYBOARD_KEYS_MAX; i++) {
+        if (keyboard_keys[i] == HID_NO_EVENT) {
+            keyboard_keys[i] = key;
+            return 1;
+        }
+    }
+    print("failed to add to keybuffer: ");
+    phex(key);
+    print("\n");
+    return 0;
+}
+
+uint8_t remove_from_keybuffer(uint8_t key) {
+    int i;
+
+    for(i=0; i<KEYBOARD_KEYS_MAX; i++) {
+        if (keyboard_keys[i] == key) {
+            keyboard_keys[i] = HID_NO_EVENT;
+            return 1;
+        }
+    }
+    print("failed to remove from keybuffer: ");
+    phex(key);
+    print("\n");
+    return 0;
 }
 
 uint8_t update_keyboard_keys (uint8_t key) {
@@ -53,12 +84,7 @@ uint8_t update_keyboard_keys (uint8_t key) {
         hid_key = keycode[key];
 
         if ((!is_modifier_button(hid_key)) && (!is_media_button(key))) {
-            for(i=0; i<KEYBOARD_KEYS_MAX; i++) {
-                if (keyboard_keys[i] == HID_NO_EVENT) {
-                    keyboard_keys[i] = hid_key;
-                    break;
-                }
-            }
+            add_to_keybuffer(hid_key);
         }
         return 1;
 
@@ -67,12 +93,7 @@ uint8_t update_keyboard_keys (uint8_t key) {
         hid_key = keycode[RELEASETOPRESS(key)];
 
         if ((!is_modifier_button(hid_key)) && (!is_media_button(key))) {
-            for(i=0; i<KEYBOARD_KEYS_MAX; i++) {
-                if (keyboard_keys[i] == hid_key) {
-                    keyboard_keys[i] = HID_NO_EVENT;
-                    break;
-                }
-            }
+            remove_from_keybuffer(hid_key);
         }
         return 1;
 
@@ -134,31 +155,70 @@ uint8_t is_modifier_button (uint8_t key) {
 uint8_t is_media_button (uint8_t key) {
 	//If the key pressed or released was a media key, update the media key
     //report and return 1 (so the key isn't added to the pressed key list)
+    uint8_t released = 0;
 
-    /*
-    switch(key)
-	{
-		case (SUN_KEY_VOL_UP):
-            print("volume up\n");
-            if (!update_keyboard_keys(HID_KEY_VOL_UP))
-                print("failed to update keyboard_keys for volume up\n");
-			break;
-		case (SUN_KEY_VOL_DOWN):
-            print("volume down\n");
-            if (!update_keyboard_keys(HID_KEY_VOL_DOWN))
-                print("failed to update keyboard_keys for volume up\n");
-			break;
+    if (RELEASETOPRESS(key) == SUN_KEY_VOL_UP) {
+        key = SUN_KEY_VOL_UP;
+        released = 1;
+    } else if(RELEASETOPRESS(key) == SUN_KEY_VOL_DOWN) {
+        key = SUN_KEY_VOL_DOWN;
+        released = 1;
+    } else if (RELEASETOPRESS(key) == SUN_KEY_VOL_MUTE) {
+        key = SUN_KEY_VOL_MUTE;
+        released = 1;
+    }
+
+    switch(key) {
 		case (SUN_KEY_VOL_MUTE):
             print("volume mute\n");
-            if (!update_keyboard_keys(HID_KEY_VOL_MUTE))
-                print("failed to update keyboard_keys for volume up\n");
+            if (!released) {
+                add_to_keybuffer(0xe0);
+                add_to_keybuffer(0x20);
+                add_to_keybuffer(0xe0);
+                add_to_keybuffer(0xa0);
+            } else {
+                remove_from_keybuffer(0xe0);
+                remove_from_keybuffer(0x20);
+                remove_from_keybuffer(0xe0);
+                remove_from_keybuffer(0xa0);
+            }
+            break;
+		case (SUN_KEY_VOL_DOWN):
+            print("volume down\n");
+            if (!released) {
+                add_to_keybuffer(0xe0);
+                add_to_keybuffer(0x2e);
+                add_to_keybuffer(0xe0);
+                add_to_keybuffer(0xae);
+            } else {
+                remove_from_keybuffer(0xe0);
+                remove_from_keybuffer(0x2e);
+                remove_from_keybuffer(0xe0);
+                remove_from_keybuffer(0xae);
+            }
+			break;
+		case (SUN_KEY_VOL_UP):
+            print("volume up\n");
+            if (!released) {
+                add_to_keybuffer(0xe0);
+                add_to_keybuffer(0x30);
+                add_to_keybuffer(0xe0);
+                add_to_keybuffer(0xb0);
+            } else {
+                remove_from_keybuffer(0xe0);
+                remove_from_keybuffer(0x30);
+                remove_from_keybuffer(0xe0);
+                remove_from_keybuffer(0xb0);
+            }
 			break;
 		default:
 			return 0;
 
 	}
-    */
-	return 0;
+
+    transmit_keyboard_buffer();
+
+	return 1;
 }
 
 unsigned char doPowerButton(unsigned char key) {

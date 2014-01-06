@@ -1,0 +1,11 @@
+kb mode was UNICODE
+[ if you are trying this under X, it might not work
+since the X server is also reading /dev/console ]
+
+press any key (program terminates 10s after last keypress)...
+0x9c 
+0xe0 0x20 0xe0 0xa0 
+0xe0 0x2e 
+0xe0 0xae 
+0xe0 0x30 
+0xe0 0xb0 
