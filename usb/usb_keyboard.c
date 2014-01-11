@@ -195,7 +195,7 @@ static const uint8_t PROGMEM config1_descriptor[CONFIG1_DESC_SIZE] = {
 	9,					// bLength
 	0x21,					// bDescriptorType
 	0x11, 0x01,				// bcdHID
-	0,					// bCountryCode
+	0x21,					// bCountryCode (US)
 	1,					// bNumDescriptors
 	0x22,					// bDescriptorType
 	sizeof(keyboard_hid_report_desc),	// wDescriptorLength

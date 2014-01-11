@@ -172,43 +172,25 @@ uint8_t is_media_button (uint8_t key) {
 		case (SUN_KEY_VOL_MUTE):
             print("volume mute\n");
             if (!released) {
-                add_to_keybuffer(0xe0);
-                add_to_keybuffer(0x20);
-                add_to_keybuffer(0xe0);
-                add_to_keybuffer(0xa0);
+                add_to_keybuffer(HID_KEY_VOL_MUTE);
             } else {
-                remove_from_keybuffer(0xe0);
-                remove_from_keybuffer(0x20);
-                remove_from_keybuffer(0xe0);
-                remove_from_keybuffer(0xa0);
+                remove_from_keybuffer(HID_KEY_VOL_MUTE);
             }
             break;
 		case (SUN_KEY_VOL_DOWN):
             print("volume down\n");
             if (!released) {
-                add_to_keybuffer(0xe0);
-                add_to_keybuffer(0x2e);
-                add_to_keybuffer(0xe0);
-                add_to_keybuffer(0xae);
+                add_to_keybuffer(HID_KEY_VOL_DOWN);
             } else {
-                remove_from_keybuffer(0xe0);
-                remove_from_keybuffer(0x2e);
-                remove_from_keybuffer(0xe0);
-                remove_from_keybuffer(0xae);
+                remove_from_keybuffer(HID_KEY_VOL_DOWN);
             }
 			break;
 		case (SUN_KEY_VOL_UP):
             print("volume up\n");
             if (!released) {
-                add_to_keybuffer(0xe0);
-                add_to_keybuffer(0x30);
-                add_to_keybuffer(0xe0);
-                add_to_keybuffer(0xb0);
+                add_to_keybuffer(HID_KEY_VOL_UP);
             } else {
-                remove_from_keybuffer(0xe0);
-                remove_from_keybuffer(0x30);
-                remove_from_keybuffer(0xe0);
-                remove_from_keybuffer(0xb0);
+                remove_from_keybuffer(HID_KEY_VOL_UP);
             }
 			break;
 		default:

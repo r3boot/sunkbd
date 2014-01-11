@@ -6,9 +6,9 @@
 
 static const uint8_t keycode[]={
 0,		// undefined
-HID_KEY_STOP,	// Stop (mapped to F14)
+HID_KEY_F14,	// Stop (mapped to F14)
 HID_KEY_VOL_DOWN,	// Volume down ; was 0x81
-HID_KEY_AGAIN,	// Again (mapped to F15)
+HID_KEY_F15,	// Again (mapped to F15)
 HID_KEY_VOL_UP,	// Volume up ; was 0x80
 0x3A,	// F1
 0x3B,	// F2
@@ -30,8 +30,8 @@ HID_KEY_LEFT_ALT,	// Alt
 0x46,	// Print Screen/Sysrq
 0x47,	// Scroll Lock
 0x50,	// Arrow left
-HID_KEY_PROP,	// Props (HID specs: keyboard menu) (mapped to F16)
-HID_KEY_UNDO,	// Undo (mapped to F17)
+HID_KEY_F16,	// Props (HID specs: keyboard menu) (mapped to F16)
+HID_KEY_F17,	// Undo (mapped to F17)
 0x51,	// Arrow down
 0x4F,	// Arrow right
 0x29,	// Esc
@@ -54,9 +54,9 @@ HID_KEY_VOL_MUTE,	// Mute ; was 0x7F / 0x79
 0x54,	// /
 0x55,	// *
 HID_KEY_POWER,	// Power ; was 0x66
-HID_KEY_FRONT,	// Front (HID specs: select) (mapped as F18)
+HID_KEY_F18,	// Front (HID specs: select) (mapped as F18)
 0x63,	// Del
-HID_KEY_COPY,	// Copy (mapped as F19)
+HID_KEY_F19,	// Copy (mapped as F19)
 0x4A,	// Home
 0x2B,	// Tab
 0x14,	// Q
@@ -77,8 +77,8 @@ HID_KEY_COPY,	// Copy (mapped as F19)
 0x60,	// Numpad 8
 0x61,	// Numpad PgUp
 0x56,	// Numpad -
-HID_KEY_OPEN,	// Open (HID specs: execute) (mapped as F20)
-HID_KEY_PASTE,	// Paste (mapped as F21)
+HID_KEY_F20,	// Open (HID specs: execute) (mapped as F20)
+HID_KEY_F21,	// Paste (mapped as F21)
 0x4D,	// End
 0,		// undefined
 0xE0,	// Control
@@ -100,9 +100,9 @@ HID_KEY_PASTE,	// Paste (mapped as F21)
 0x5D,	// Numpad 5
 0x5E,	// Numpad 6
 0x62,	// Numpad 0
-HID_KEY_FIND,	// Find (mapped as F22)
+HID_KEY_F22,	// Find (mapped as F22)
 0x4B,	// Page Up
-HID_KEY_CUT,	// Cut (mapped as F23)
+HID_KEY_F23,	// Cut (mapped as F23)
 0x53,	// Num Lock
 0xE1,	// Shift
 0x1D,	// Z
@@ -123,7 +123,7 @@ HID_KEY_CUT,	// Cut (mapped as F23)
 0,		// undefined
 0,		// undefined
 0,		// undefined
-HID_KEY_HELP,	// Help (mapped to F13) ; was 0x68
+HID_KEY_F13,	// Help (mapped to F13) ; was 0x68
 0x39,	// Caps Lock
 HID_KEY_LEFT_GUI,	// Left Meta (HID specs: left GUI)
 0x2C,	// Space
