@@ -10,6 +10,7 @@ int8_t usb_keyboard_press(uint8_t key, uint8_t modifier);
 int8_t usb_keyboard_send(void);
 extern uint8_t keyboard_modifier_keys;
 extern uint8_t keyboard_keys[6];
+extern uint8_t remote_keys;
 extern volatile uint8_t keyboard_leds;
 
 int8_t usb_debug_putchar(uint8_t c);	// transmit a character
