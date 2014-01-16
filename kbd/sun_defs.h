@@ -2,24 +2,45 @@
 
 #define RELEASETOPRESS(x) x-(SUN_KEY_RELEASED+1) //Convert a key release code to a press code
 
-//Keyboard commands/responses
-#define SUN_COMMAND_RESET 0x01
-#define SUN_COMMAND_BELL_ON 0x02
-#define SUN_COMMAND_BELL_OFF 0x03
-#define SUN_COMMAND_CLICK_ON 0x0A
-#define SUN_COMMAND_CLICK_OFF 0x0B
-#define SUN_COMMAND_LEDS 0x0E
-#define SUN_RESPONSE_INIT_SUCCESS_1 0xFF
-#define SUN_RESPONSE_INIT_SUCCESS_2 0x04
-#define SUN_RESPONSE_INIT_SUCCESS_3 0x7F
-#define SUN_RESPONSE_INIT_FAILURE_1 0x7E
-#define SUN_RESPONSE_INIT_FAILURE_2 0x01
-#define SUN_RESPONSE_IDLE 0x7F
-#define SUN_LED_NUM_LOCK 0b00000001
-#define SUN_LED_COMPOSE 0b00000010
-#define SUN_LED_SCROLL_LOCK 0b00000100
-#define SUN_LED_CAPS_LOCK 0b00001000
-#define SUN_KEY_RELEASED 0x7F
+// Keyboard commands
+#define KBD_CMD_RESET           0x01
+#define KBD_CMD_BELL_ON         0x02
+#define KBD_CMD_BELL_OFF        0x03
+#define KBD_CMD_CLICK_ON        0x0a
+#define KBD_CMD_CLICK_OFF       0x0b
+#define KBD_CMD_LEDS            0x0e
+#define KBD_CMD_LAYOUT          0x0f
+
+// Keyboard responses
+#define KBD_RESP_INIT_SUCCESS_1 0xFF
+#define KBD_RESP_INIT_SUCCESS_2 0x04
+#define KBD_RESP_INIT_SUCCESS_3 0x7F
+#define KBD_RESP_INIT_FAILURE_1 0x7E
+#define KBD_RESP_INIT_FAILURE_2 0x01
+#define KBD_RESP_IDLE           0x7F
+
+// Binary positions of LEDs
+#define KBD_LED_NUM_LOCK        0b00000001
+#define KBD_LED_COMPOSE         0b00000010
+#define KBD_LED_SCROLL_LOCK     0b00000100
+#define KBD_LED_CAPS_LOCK       0b00001000
+
+// Keyboard layout responses
+#define KBD_LAYOUT_UNITED_STATES    0x00
+#define KBD_LAYOUT_FRENCH_BELGIUM   0x02
+#define KBD_LAYOUT_CANADA_FRENCH    0x03
+#define KBD_LAYOUT_DENMARK          0x04
+#define KBD_LAYOUT_GERMANY          0x05
+#define KBD_LAYOUT_ITALY            0x06
+#define KBD_LAYOUT_JAPAN            0x20
+#define KBD_LAYOUT_NETHERLANDS      0x07
+#define KBD_LAYOUT_NORWAY           0x08
+#define KBD_LAYOUT_PORTUGAL         0x09
+#define KBD_LAYOUT_SPAIN            0x0a
+#define KBD_LAYOUT_SWEDEN           0x0b
+#define KBD_LAYOUT_SWISS_FRENCH     0x0c
+#define KBD_LAYOUT_SWISS_GERMAN     0x0d
+#define KBD_LAYOUT_UNITED_KINGDOM   0x0e
 
 //Modifier keys
 #define SUN_KEY_CAPS_LOCK	0x77

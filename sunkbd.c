@@ -106,6 +106,7 @@ int main (void) {
             if (keys_pressed()) LED_ON;
             transmit_keyboard_buffer();
             if (keys_pressed()) LED_OFF;
+
         }
 
 	}

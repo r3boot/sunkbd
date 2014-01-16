@@ -28,12 +28,20 @@
 #define UP_CONSUMER_DEV    0x0c
 
 // Usages
-#define U_REMOTE          0x01
-#define U_KEYBOARD        0x06
-#define U_VOLUME_UP       0xe9
-#define U_VOLUME_DOWN     0xea
-#define U_MUTE            0xe2
-
+#define U_REMOTE        0x01
+#define U_KEYBOARD      0x06
+#define U_POWER         0x30
+#define U_PLAY          0xb0
+#define U_PAUSE         0xb1
+#define U_RECORD        0xb2
+#define U_FORWARD       0xb3
+#define U_REWIND        0xb4
+#define U_NEXT          0xb5
+#define U_PREV          0xb6
+#define U_STOP          0xb7
+#define U_MUTE          0xe2
+#define U_VOLUME_UP     0xe9
+#define U_VOLUME_DOWN   0xea
 
 // Collections
 #define C_APPLICATION     0x01

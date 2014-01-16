@@ -80,22 +80,22 @@
 #define KEYBOARD_SIZE		8
 #define KEYBOARD_BUFFER		EP_DOUBLE_BUFFER
 
-#define REMOTE_INTERFACE    1
-#define REMOTE_ENDPOINT     4
-#define REMOTE_SIZE         8
-#define REMOTE_BUFFER       EP_DOUBLE_BUFFER
-
-#define DEBUG_INTERFACE		2
-#define DEBUG_TX_ENDPOINT	5
+#define DEBUG_INTERFACE		1
+#define DEBUG_TX_ENDPOINT	4
 #define DEBUG_TX_SIZE		32
 #define DEBUG_TX_BUFFER		EP_DOUBLE_BUFFER
+
+#define REMOTE_INTERFACE    2
+#define REMOTE_ENDPOINT     5
+#define REMOTE_SIZE         1
+#define REMOTE_BUFFER       EP_DOUBLE_BUFFER
 
 static const uint8_t PROGMEM endpoint_config_table[] = {
 	0,
 	0,
 	1, EP_TYPE_INTERRUPT_IN,  EP_SIZE(KEYBOARD_SIZE) | KEYBOARD_BUFFER,
-    1, EP_TYPE_INTERRUPT_IN,  EP_SIZE(REMOTE_SIZE)   | REMOTE_BUFFER,
-	1, EP_TYPE_INTERRUPT_IN,  EP_SIZE(DEBUG_TX_SIZE) | DEBUG_TX_BUFFER
+	1, EP_TYPE_INTERRUPT_IN,  EP_SIZE(DEBUG_TX_SIZE) | DEBUG_TX_BUFFER,
+    1, EP_TYPE_INTERRUPT_IN,  EP_SIZE(REMOTE_SIZE)   | REMOTE_BUFFER
 };
 
 
@@ -135,112 +135,87 @@ static const uint8_t PROGMEM device_descriptor[] = {
 
 // Keyboard Protocol 1, HID 1.11 spec, Appendix B, page 59-60
 static const uint8_t PROGMEM keyboard_hid_report_desc[] = {
-        USAGE_PAGE,     UP_GENERIC_DESKTOP,          // Usage Page (Generic Desktop),
-        USAGE,          U_KEYBOARD,          // Usage (Keyboard),
-        COLLECTION,     C_APPLICATION,          // Collection (Application),
-        REPORT_SIZE,    0x01,          //   Report Size (1),
-        REPORT_COUNT,   0x08,          //   Report Count (8),
-        USAGE_PAGE,     UP_KEY_CODES,          //   Usage Page (Key Codes),
-        USAGE_MIN,      0xE0,          //   Usage Minimum (224),
-        USAGE_MAX,      0xE7,          //   Usage Maximum (231),
-        LOGICAL_MIN,    0x00,          //   Logical Minimum (0),
-        LOGICAL_MAX,    0x01,          //   Logical Maximum (1),
-        INPUT,          I_DATA_VAR_ABS,          //   Input (Data, Variable, Absolute), ;Modifier byte
-        REPORT_COUNT,   0x01,          //   Report Count (1),
-        REPORT_SIZE,    0x08,          //   Report Size (8),
-        INPUT,          I_CONSTANT,          //   Input (Constant),                 ;Reserved byte
-        REPORT_COUNT,   0x05,          //   Report Count (5),
-        REPORT_SIZE,    0x01,          //   Report Size (1),
-        USAGE_PAGE,     UP_LEDS,          //   Usage Page (LEDs),
-        USAGE_MIN,      0x01,          //   Usage Minimum (1),
-        USAGE_MAX,      0x05,          //   Usage Maximum (5),
-        OUTPUT,         O_DATA_VAR_ABS,          //   Output (Data, Variable, Absolute), ;LED report
-        REPORT_COUNT,   0x01,          //   Report Count (1),
-        REPORT_SIZE,    0x03,          //   Report Size (3),
-        OUTPUT,         O_CONSTANT,          //   Output (Constant),                 ;LED report padding
-        REPORT_COUNT,   0x06,          //   Report Count (6),
-        REPORT_SIZE,    0x08,          //   Report Size (8),
-        LOGICAL_MIN,    0x00,          //   Logical Minimum (0),
-        LOGICAL_MAX,    0xdf,          //   Logical Maximum(239),
-        USAGE_PAGE,     UP_KEY_CODES,          //   Usage Page (Key Codes),
-        USAGE_MIN,      0x00,          //   Usage Minimum (0),
-        USAGE_MAX,      0xdf,          //   Usage Maximum (239),
-        INPUT,          I_DATA_ARRAY,          //   Input (Data, Array),
-        END_COLLECTION                 // End Collection
+        USAGE_PAGE,     UP_GENERIC_DESKTOP, // Usage Page (Generic Desktop),
+        USAGE,          U_KEYBOARD,         // Usage (Keyboard),
+        COLLECTION,     C_APPLICATION,      // Collection (Application),
+        REPORT_SIZE,    0x01,               // Report Size (1),
+        REPORT_COUNT,   0x08,               // Report Count (8),
+        USAGE_PAGE,     UP_KEY_CODES,       // Usage Page (Key Codes),
+        USAGE_MIN,      0xE0,               // Usage Minimum (224),
+        USAGE_MAX,      0xE7,               // Usage Maximum (231),
+        LOGICAL_MIN,    0x00,               // Logical Minimum (0),
+        LOGICAL_MAX,    0x01,               // Logical Maximum (1),
+        INPUT,          I_DATA_VAR_ABS,     // Input (Data, Variable, Absolute), ;Modifier byte
+        REPORT_COUNT,   0x01,               // Report Count (1),
+        REPORT_SIZE,    0x08,               // Report Size (8),
+        INPUT,          I_CONSTANT,         // Input (Constant),                 ;Reserved byte
+        REPORT_COUNT,   0x05,               // Report Count (5),
+        REPORT_SIZE,    0x01,               // Report Size (1),
+        USAGE_PAGE,     UP_LEDS,            // Usage Page (LEDs),
+        USAGE_MIN,      0x01,               // Usage Minimum (1),
+        USAGE_MAX,      0x05,               // Usage Maximum (5),
+        OUTPUT,         O_DATA_VAR_ABS,     // Output (Data, Variable, Absolute), ;LED report
+        REPORT_COUNT,   0x01,               // Report Count (1),
+        REPORT_SIZE,    0x03,               // Report Size (3),
+        OUTPUT,         O_CONSTANT,         // Output (Constant),                 ;LED report padding
+        REPORT_COUNT,   0x06,               // Report Count (6),
+        REPORT_SIZE,    0x08,               // Report Size (8),
+        LOGICAL_MIN,    0x00,               // Logical Minimum (0),
+        LOGICAL_MAX,    0x82,               // Logical Maximum(239),
+        USAGE_PAGE,     UP_KEY_CODES,       // Usage Page (Key Codes),
+        USAGE_MIN,      0x00,               // Usage Minimum (0),
+        USAGE_MAX,      0x82,               // Usage Maximum (239),
+        INPUT,          I_DATA_ARRAY,       // Input (Data, Array),
+        END_COLLECTION                      // End Collection
 };
 
-// Remote protocol, http://stefanjones.ca/blog/arduino-leonardo-remote-multimedia-keys/
+// Remote protocol, https://github.com/obra/Arduino/blob/usb-hid/hardware/arduino/avr/cores/arduino/HID.cpp
 static const uint8_t PROGMEM remote_hid_report_desc[] = {
-    0x05, 0x0c, // Usage Page (Consumer Devices)   05 0C 
-    0x09, 0x01, // Usage (Consumer Control)    09 01 
-    0xa1, 0x01, // Collection (Application)    A1 01 
-    0x85, 0x01, // Report ID (1)   85 01 
-    0x05, 0x0c, // Usage Page (Consumer Devices)   05 0C 
-    0x15, 0x00, // Logical Minimum (0) 15 00 
-    0x25, 0x01, // Logical Maximum (1) 25 01 
-    0x75, 0x01, // Report Size (1) 75 01 
-    0x95, 0x07, // Report Count (7)    95 07 
-    0x09, 0xb5, // Usage (Scan Next Track) 09 B5 
-    0x09, 0xb6, // Usage (Scan Previous Track) 09 B6 
-    0x09, 0xb7, // Usage (Stop)    09 B7 
-    0x09, 0xcd, // Usage (Play/Pause)  09 CD 
-    0x09, 0xe2, // Usage (Mute)    09 E2 
-    0x09, 0xe9, // Usage (Volume Increment)    09 E9 
-    0x09, 0xea, // Usage (Volume Decrement)    09 EA 
-    0x81, 0x02, // Input (Data,Var,Abs,NWrp,Lin,Pref,NNul,Bit) 81 02 
-    0x95, 0x01, // Report Count (1)    95 01 
-    0x81, 0x01, // Input (Cnst,Ary,Abs)    81 01 
-    0xc0        // End Collection  C0 
-};
-
-    /*
-    USAGE_PAGE,     UP_CONSUMER_DEV,    // Usage Page (Consumer Devices)
-    USAGE,          U_REMOTE,           // Usage (Consumer Control)
-    COLLECTION,     C_APPLICATION,      // Collection (Application)
-    REPORT_ID,      0x02,               // REPORT_ID (1; was 4)
-    USAGE_PAGE,     UP_CONSUMER_DEV,    // Usage Page (Consumer Devices)
-    LOGICAL_MIN,    0x00,               // Logical Minimum (0)
-    LOGICAL_MAX,    0x01,               // Logical Maximum (1)
+    USAGE_PAGE,     UP_GENERIC_DESKTOP, // USAGE_PAGE (Generic Desktop)
+    USAGE,          U_REMOTE,           // USAGE (Consumer Control)
+    COLLECTION,     C_APPLICATION,      // COLLECTION (Application)
+    LOGICAL_MIN,    0x00,               // Logical minimum (0)
+    LOGICAL_MAX,    0x01,               // Logical maximum (1)
+    REPORT_ID,      0x04,               // REPORT_ID (4)
     REPORT_SIZE,    0x01,               // Report Size (1)
-    REPORT_COUNT,   0x07,               // Report Count (3)
+    REPORT_COUNT,   0x08,               // Report Count (8)
+    USAGE,          U_POWER,            // Usage (Power)
     USAGE,          U_MUTE,             // Usage (Mute)
     USAGE,          U_VOLUME_UP,        // Usage (Volume Up)
     USAGE,          U_VOLUME_DOWN,      // Usage (Volume Down)
-    USAGE,          0xcd,               // Usage (Play/Pause)
-    USAGE,          0xb5,               // Usage (Next)
-    USAGE,          0xb6,               // Usage (Prev)
-    USAGE,          0xb7,               // Usage (Stop)
-    INPUT,          I_DATA_VAR_ABS,     // Input (Data, Variable, Absolute)
-    REPORT_COUNT,   0x01,               // Report Count (13) (Number of bits left over)
-    INPUT,          0x01,    // Input (Cnst,Ary,Abs)
+    USAGE,          U_PLAY,             // Usage (Play)
+    USAGE,          U_STOP,             // Usage (Stop)
+    USAGE,          U_NEXT,             // Usage (Next track)
+    USAGE,          U_PREV,             // Usage (Previous track)
+    INPUT,          I_DATA_VAR_ABS,     // Input (Data, Var, Abs)
     END_COLLECTION
 };
-    */
 
 static const uint8_t PROGMEM debug_hid_report_desc[] = {
-	USAGE_PAGE_U16,     0x31, 0xFF,			// Usage Page 0xFF31 (vendor defined)
-	USAGE,              0x74,				// Usage 0x74
-	COLLECTION,         0x53,				// Collection 0x53
-	REPORT_SIZE,        0x08,				// report size = 8 bits
-	LOGICAL_MIN,        0x00,				// logical minimum = 0
-	LOGICAL_MAX_U16,    0xFF, 0x00,			// logical maximum = 255
-	REPORT_COUNT,       DEBUG_TX_SIZE,			// report count
-	USAGE,              0x75,				// usage
-	INPUT,              0x02,				// Input (array)
-	END_COLLECTION					// end collection
+	USAGE_PAGE_U16,     0x31, 0xFF,     // Usage Page 0xFF31 (vendor defined)
+	USAGE,              0x74,           // Usage 0x74
+	COLLECTION,         0x53,           // Collection 0x53
+	REPORT_SIZE,        0x08,           // report size = 8 bits
+	LOGICAL_MIN,        0x00,           // logical minimum = 0
+	LOGICAL_MAX_U16,    0xFF, 0x00,     // logical maximum = 255
+	REPORT_COUNT,       DEBUG_TX_SIZE,  // report count
+	USAGE,              0x75,           // usage
+	INPUT,              0x02,           // Input (array)
+	END_COLLECTION                      // end collection
 };
 
 #define CONFIG1_DESC_SIZE        (9+9+9+7+9+9+7+9+9+7)
 #define KEYBOARD_HID_DESC_OFFSET (9+9)
-#define REMOTE_HID_DESC_OFFSET   (9+9+9+7+9)
-#define DEBUG_HID_DESC_OFFSET    (9+9+9+7+9+9+7+9)
+#define DEBUG_HID_DESC_OFFSET   (9+9+9+7+9)
+#define REMOTE_HID_DESC_OFFSET    (9+9+9+7+9+9+7+9)
 static const uint8_t PROGMEM config1_descriptor[CONFIG1_DESC_SIZE] = {
 
 	// configuration descriptor, USB spec 9.6.3, page 264-266, Table 9-10
 	9, 					// bLength;
 	2,					// bDescriptorType;
-	LSB(CONFIG1_DESC_SIZE),			// wTotalLength
-	MSB(CONFIG1_DESC_SIZE),
+    0x54, 0x00,         // wTotalLength
+	//LSB(CONFIG1_DESC_SIZE),			// wTotalLength
+	//MSB(CONFIG1_DESC_SIZE),
 	3,					// bNumInterfaces
 	1,					// bConfigurationValue
 	0,					// iConfiguration
@@ -260,7 +235,7 @@ static const uint8_t PROGMEM config1_descriptor[CONFIG1_DESC_SIZE] = {
 	// Keyboard HID interface descriptor, HID 1.11 spec, section 6.2.1
 	9,					// bLength
 	0x21,					// bDescriptorType
-	0x11, 0x01,				// bcdHID
+	0x10, 0x01,				// bcdHID
 	0x21,					// bCountryCode (US)
 	1,					// bNumDescriptors
 	0x22,					// bDescriptorType
@@ -272,6 +247,33 @@ static const uint8_t PROGMEM config1_descriptor[CONFIG1_DESC_SIZE] = {
 	KEYBOARD_ENDPOINT | 0x80,		// bEndpointAddress
 	0x03,					// bmAttributes (0x03=intr)
 	KEYBOARD_SIZE, 0,			// wMaxPacketSize
+	1,					// bInterval
+
+	// Debug interface descriptor, USB spec 9.6.5, page 267-269, Table 9-12
+	9,					// bLength
+	4,					// bDescriptorType
+	DEBUG_INTERFACE,			// bInterfaceNumber
+	0,					// bAlternateSetting
+	1,					// bNumEndpoints
+	0x03,					// bInterfaceClass (0x03 = HID)
+	0x00,					// bInterfaceSubClass
+	0x00,					// bInterfaceProtocol
+	0,					// iInterface
+	// Debug HID interface descriptor, HID 1.11 spec, section 6.2.1
+	9,					// bLength
+	0x21,					// bDescriptorType
+	0x10, 0x01,				// bcdHID
+	0,					// bCountryCode
+	1,					// bNumDescriptors
+	0x22,					// bDescriptorType
+	sizeof(debug_hid_report_desc),		// wDescriptorLength
+	0,
+	// Debug endpoint descriptor, USB spec 9.6.6, page 269-271, Table 9-13
+	7,					// bLength
+	5,					// bDescriptorType
+	DEBUG_TX_ENDPOINT | 0x80,		// bEndpointAddress
+	0x03,					// bmAttributes (0x03=intr)
+	DEBUG_TX_SIZE, 0,			// wMaxPacketSize
 	1,					// bInterval
 
     // Remote interface descriptor, USB spec 9.6.5, page 267-269, Table 9-12
@@ -287,7 +289,7 @@ static const uint8_t PROGMEM config1_descriptor[CONFIG1_DESC_SIZE] = {
     // Remote HID interface descriptor, HID 1.11 spec, section 6.2.1
     9,                  // bLength
     0x21,               // bDescriptorType
-    0x11, 0x01,         // bcdHID
+    0x10, 0x01,         // bcdHID
     0,                  // bCountryCode
     1,                  // bNumDescriptors
     0x22,               // bDescriptorType
@@ -299,34 +301,7 @@ static const uint8_t PROGMEM config1_descriptor[CONFIG1_DESC_SIZE] = {
     REMOTE_ENDPOINT | 0x80, // bEndpointAddress
     0x03,               // bmAttributes (0x03=intr)
     REMOTE_SIZE, 0,     // wMaxPacketSize
-    1,                  // bInterval
-
-	// Debug interface descriptor, USB spec 9.6.5, page 267-269, Table 9-12
-	9,					// bLength
-	4,					// bDescriptorType
-	DEBUG_INTERFACE,			// bInterfaceNumber
-	0,					// bAlternateSetting
-	1,					// bNumEndpoints
-	0x03,					// bInterfaceClass (0x03 = HID)
-	0x00,					// bInterfaceSubClass
-	0x00,					// bInterfaceProtocol
-	0,					// iInterface
-	// Debug HID interface descriptor, HID 1.11 spec, section 6.2.1
-	9,					// bLength
-	0x21,					// bDescriptorType
-	0x11, 0x01,				// bcdHID
-	0,					// bCountryCode
-	1,					// bNumDescriptors
-	0x22,					// bDescriptorType
-	sizeof(debug_hid_report_desc),		// wDescriptorLength
-	0,
-	// Debug endpoint descriptor, USB spec 9.6.6, page 269-271, Table 9-13
-	7,					// bLength
-	5,					// bDescriptorType
-	DEBUG_TX_ENDPOINT | 0x80,		// bEndpointAddress
-	0x03,					// bmAttributes (0x03=intr)
-	DEBUG_TX_SIZE, 0,			// wMaxPacketSize
-	1					// bInterval
+    1                   // bInterval
 };
 
 // If you're desperate for a little extra code memory, these strings
@@ -365,10 +340,10 @@ static const struct descriptor_list_struct {
 	{0x0200, 0x0000, config1_descriptor, sizeof(config1_descriptor)},
 	{0x2200, KEYBOARD_INTERFACE, keyboard_hid_report_desc, sizeof(keyboard_hid_report_desc)},
 	{0x2100, KEYBOARD_INTERFACE, config1_descriptor+KEYBOARD_HID_DESC_OFFSET, 9},
-    {0x2200, REMOTE_INTERFACE, remote_hid_report_desc, sizeof(remote_hid_report_desc)},
-    {0x2100, REMOTE_INTERFACE, config1_descriptor+REMOTE_HID_DESC_OFFSET, 9},
 	{0x2200, DEBUG_INTERFACE, debug_hid_report_desc, sizeof(debug_hid_report_desc)},
 	{0x2100, DEBUG_INTERFACE, config1_descriptor+DEBUG_HID_DESC_OFFSET, 9},
+    {0x2200, REMOTE_INTERFACE, remote_hid_report_desc, sizeof(remote_hid_report_desc)},
+    {0x2100, REMOTE_INTERFACE, config1_descriptor+REMOTE_HID_DESC_OFFSET, 9},
 	{0x0300, 0x0000, (const uint8_t *)&string0, 4},
 	{0x0301, 0x0409, (const uint8_t *)&string1, sizeof(STR_MANUFACTURER)},
 	{0x0302, 0x0409, (const uint8_t *)&string2, sizeof(STR_PRODUCT)}
@@ -398,6 +373,7 @@ uint8_t keyboard_modifier_keys=0;
 uint8_t keyboard_keys[6]={0,0,0,0,0,0};
 
 // which consumer control keys are currently pressed
+// 1=power, 2=mute, 4=volume up, 8=volume down
 uint8_t remote_keys=0;
 
 // protocol setting from the host.  We use exactly the same report
@@ -426,15 +402,15 @@ volatile uint8_t keyboard_leds=0;
 // initialize USB
 void usb_init(void)
 {
-	HW_CONFIG();
-	USB_FREEZE();				// enable USB
-	PLL_CONFIG();				// config PLL
-        while (!(PLLCSR & (1<<PLOCK))) ;	// wait for PLL lock
-        USB_CONFIG();				// start USB clock
-        UDCON = 0;				// enable attach resistor
-	usb_configuration = 0;
-        UDIEN = (1<<EORSTE)|(1<<SOFE);
-	sei();
+    HW_CONFIG();
+    USB_FREEZE();				// enable USB
+    PLL_CONFIG();				// config PLL
+    while (!(PLLCSR & (1<<PLOCK))) ;	// wait for PLL lock
+    USB_CONFIG();				// start USB clock
+    UDCON = 0;				// enable attach resistor
+    usb_configuration = 0;
+    UDIEN = (1<<EORSTE)|(1<<SOFE);
+    sei();
 }
 
 // return 0 if the USB is not configured, or the configuration
@@ -869,10 +845,7 @@ ISR(USB_COM_vect)
 			if (bmRequestType == 0xA1) {
 				if (bRequest == HID_GET_REPORT) {
 					usb_wait_in_ready();
-					for (i=0; i<7; i++) {
-						UEDATX = keyboard_keys[i];
-					}
-					UEDATX = 0;
+                    UEDATX = remote_keys;
 					usb_send_in();
 					return;
 				}
@@ -939,14 +912,17 @@ ISR(USB_COM_vect)
 void dump_keys (void) {
     uint8_t i;
 
-    print("keys: ");
+    print("buffer: ");
+    phex(keyboard_modifier_keys);
+    print(" 00");
     for (i=0; i<KEYBOARD_KEYS_MAX; i++) {
         print(" ");
         phex(keyboard_keys[i]);
     }
-    print("; modifiers: ");
-    phex(keyboard_modifier_keys);
+    print("  ");
+    phex(remote_keys);
     print("\n");
+
 }
 
 uint8_t keys_pressed (void) {
@@ -984,7 +960,4 @@ void transmit_keyboard_buffer (void) {
 
     usb_keyboard_send();
     usb_remote_send();
-
-    //if (keys_pressed())
-    //    _delay_ms(50);
 }

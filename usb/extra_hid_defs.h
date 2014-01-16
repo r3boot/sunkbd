@@ -4,9 +4,10 @@
 #define HID_MAX_KEYS 6 //Maximum amount of keys in HID data array
 
 // HID Remote keys
-#define HID_REMOTE_MUTE             0x10
-#define HID_REMOTE_VOLUME_UP        0x20
-#define HID_REMOTE_VOLUME_DOWN      0x40
+#define HID_REMOTE_POWER            0x01
+#define HID_REMOTE_MUTE             0x02
+#define HID_REMOTE_VOLUME_UP        0x04
+#define HID_REMOTE_VOLUME_DOWN      0x08
 
 //HID Modifier keys
 #define HID_MODIFIER_LEFT_CONTROL	0x01

@@ -10,7 +10,6 @@
 uint8_t led_state = 0;
 uint8_t bell_enabled = 0;
 uint8_t click_enabled = 0;
-uint8_t media_button_state = 0;
 
 void toggle_bell(void) {
     if (bell_enabled) {
@@ -83,7 +82,7 @@ uint8_t update_keyboard_keys (uint8_t key) {
         // Key has been pressed
         hid_key = keycode[key];
 
-        if ((!is_modifier_button(hid_key)) && (!is_media_button(key))) {
+        if ((!is_modifier_button(hid_key)) && (!is_remote_button(hid_key))) {
             add_to_keybuffer(hid_key);
         }
         return 1;
@@ -92,7 +91,7 @@ uint8_t update_keyboard_keys (uint8_t key) {
         // Key has been released
         hid_key = keycode[RELEASETOPRESS(key)];
 
-        if ((!is_modifier_button(hid_key)) && (!is_media_button(key))) {
+        if ((!is_modifier_button(hid_key)) && (!is_remote_button(hid_key))) {
             remove_from_keybuffer(hid_key);
         }
         return 1;
@@ -152,38 +151,30 @@ uint8_t is_modifier_button (uint8_t key) {
 	return 1;
 }
 
-uint8_t is_media_button (uint8_t key) {
+uint8_t is_remote_button (uint8_t key) {
 	//If the key pressed or released was a media key, update the media key
     //report and return 1 (so the key isn't added to the pressed key list)
 
     switch(key) {
-		case (SUN_KEY_VOL_MUTE):
-            add_to_keybuffer(HID_KEY_VOL_MUTE);
+        case HID_KEY_POWER:
+            remote_keys ^= HID_REMOTE_POWER;
             break;
-		case (SUN_KEY_VOL_DOWN):
-            add_to_keybuffer(HID_KEY_VOL_DOWN);
-			break;
-		case (SUN_KEY_VOL_UP):
-            add_to_keybuffer(HID_KEY_VOL_UP);
-			break;
-		default:
-			return 0;
+        case HID_KEY_VOL_MUTE:
+            remote_keys ^= HID_REMOTE_MUTE;
+            break;
+        case HID_KEY_VOL_DOWN:
+            remote_keys ^= HID_REMOTE_VOLUME_DOWN;
+            break;
+        case HID_KEY_VOL_UP:
+            remote_keys ^= HID_REMOTE_VOLUME_UP;
+            break;
+        default:
+            return 0;
+    }
 
-	}
+    dump_keys();
 
-	return 1;
-}
-
-unsigned char doPowerButton(unsigned char key) {
-	//Sets power management report info
-	//Only reacts to key press, not release
-	//Returns 1 if key was power button, so key isn't converted to HID code
-	if (key == SUN_KEY_POWER)
-	{
-		// power_button_state = 0b00000001;
-		return 1;
-	}
-	return 0;
+    return 1;
 }
 
 uint8_t doLedButtons(unsigned char key) {

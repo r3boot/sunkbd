@@ -68,7 +68,6 @@ void uart_putc(uint8_t c) {
 	while (tx_buffer_tail == i);
 	tx_buffer[i] = c;
 	tx_buffer_head = i;
-    print("Enabling transmit interrupt\n");
 	UCSR1B = (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1) | (1<<UDRIE1);
 }
 
@@ -130,6 +129,7 @@ ISR(USART1_RX_vect) {
     i = rx_buffer_head + 1;
     if (i >= RX_BUFFER_SIZE) i = 0;
     if (i != rx_buffer_tail) {
+        /*
         if (c != SUN_RESPONSE_IDLE) {
             print("add to rx_buffer: sun=");
             phex(c);
@@ -139,6 +139,7 @@ ISR(USART1_RX_vect) {
             phex(keycode[RELEASETOPRESS(c)]);
             print("\n");
         }
+        */
         rx_buffer[i] = c;
         rx_buffer_head = i;
     }
