@@ -49,7 +49,8 @@ SRC =	$(TARGET).c \
 	usb/print.c \
 	usb/usb_keyboard.c \
 	kbd/uart.c \
-	kbd/keyboard.c
+	kbd/keyboard.c \
+	kbd/buffers.c
 
 
 # MCU name, you MUST set this to match the board you are using

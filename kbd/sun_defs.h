@@ -1,6 +1,6 @@
 // Definitions of SUN Keyboard constants
 
-#define RELEASETOPRESS(x) x-(SUN_KEY_RELEASED+1) //Convert a key release code to a press code
+#define RELEASETOPRESS(x) x-(KBD_RESP_RELEASED+1) //Convert a key release code to a press code
 
 // Keyboard commands
 #define KBD_CMD_RESET           0x01
@@ -12,12 +12,14 @@
 #define KBD_CMD_LAYOUT          0x0f
 
 // Keyboard responses
-#define KBD_RESP_INIT_SUCCESS_1 0xFF
+#define KBD_RESP_INIT_SUCCESS_1 0xff
 #define KBD_RESP_INIT_SUCCESS_2 0x04
-#define KBD_RESP_INIT_SUCCESS_3 0x7F
-#define KBD_RESP_INIT_FAILURE_1 0x7E
+#define KBD_RESP_INIT_SUCCESS_3 0x7f
+#define KBD_RESP_INIT_FAILURE_1 0x7e
 #define KBD_RESP_INIT_FAILURE_2 0x01
-#define KBD_RESP_IDLE           0x7F
+#define KBD_RESP_LAYOUT_SUCCESS 0xfe
+#define KBD_RESP_RELEASED       0x7f
+#define KBD_RESP_IDLE           0x7f
 
 // Binary positions of LEDs
 #define KBD_LED_NUM_LOCK        0b00000001

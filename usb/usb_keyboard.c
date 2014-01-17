@@ -472,7 +472,7 @@ int8_t usb_keyboard_send(void)
 // send the contents of remote_keys
 int8_t usb_remote_send(void)
 {
-	uint8_t i, intr_state, timeout;
+	uint8_t intr_state, timeout;
 
 	if (!usb_configuration) return -1;
 	intr_state = SREG;

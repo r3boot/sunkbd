@@ -19,6 +19,7 @@ uint8_t keys_pressed (void);            // check if there is a key in the
                                         // keyboard buffer
 uint8_t key_slot_available (void);      // check if there's a keyslot available
 void transmit_keyboard_buffer(void);    // transmit the keyboard buffer to pc
+void dump_keys (void);
 
 #define USB_DEBUG_HID
 

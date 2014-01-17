@@ -30,22 +30,13 @@
 #include <avr/pgmspace.h>
 #include <stdio.h>
 
+#include "kbd/buffers.h"
 #include "kbd/keyboard.h"
 #include "kbd/uart.h"
 #include "kbd/keymap.h"
 #include "usb/usb_keyboard.h"
 #include "usb/print.h"
 
-// These buffers may be any size from 2 to 256 bytes.
-#define RX_BUFFER_SIZE 64
-#define TX_BUFFER_SIZE 40
-
-static volatile uint8_t tx_buffer[TX_BUFFER_SIZE];
-static volatile uint8_t tx_buffer_head;
-static volatile uint8_t tx_buffer_tail;
-static volatile uint8_t rx_buffer[RX_BUFFER_SIZE];
-static volatile uint8_t rx_buffer_head;
-static volatile uint8_t rx_buffer_tail;
 
 // Initialize the UART
 void uart_init(uint32_t baud) {
@@ -54,93 +45,55 @@ void uart_init(uint32_t baud) {
 	UCSR1A = (1<<U2X1);
 	UCSR1B = (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1);
 	UCSR1C = (1<<UCSZ11) | (1<<UCSZ10);
-	tx_buffer_head = tx_buffer_tail = 0;
-	rx_buffer_head = rx_buffer_tail = 0;
 	sei();
 }
 
 // Transmit a byte
 void uart_putc(uint8_t c) {
-	uint8_t i;
-
-	i = tx_buffer_head + 1;
-	if (i >= TX_BUFFER_SIZE) i = 0;
-	while (tx_buffer_tail == i);
-	tx_buffer[i] = c;
-	tx_buffer_head = i;
+    tx_buffer_put(c);
 	UCSR1B = (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1) | (1<<UDRIE1);
 }
 
 // Receive a byte
 uint8_t uart_getc(void) {
-    uint8_t c, i;
-
-    if (rx_buffer_head == rx_buffer_tail) {
+    if (rx_buffer_empty()) {
         print("rx_buffer is empty\n");
         return 0;
     }
 
-	// while (rx_buffer_head == rx_buffer_tail) ; // wait for character
-
-    i = rx_buffer_tail + 1;
-    if (i >= RX_BUFFER_SIZE) i = 0;
-    c = rx_buffer[i];
-    rx_buffer_tail = i;
-    return c;
+    return tx_buffer_get();
 }
 
 // Return the number of bytes waiting in the receive buffer.
 // Call this before uart_getchar() to check if it will need
 // to wait for a byte to arrive.
 uint8_t uart_available(void) {
-    return rx_buffer_head -  rx_buffer_tail;
+    return rx_buffer_count() > 0;
 }
 
 uint8_t uart_tx_busy(void) {
-    return tx_buffer_head + 1;
+    return rx_buffer_count() + 1;
 }
 
 // Transmit Interrupt
 ISR(USART1_UDRE_vect) {
-	uint8_t i;
-
-	if (tx_buffer_head == tx_buffer_tail) {
+	if (tx_buffer_empty()) {
 		// buffer is empty, disable transmit interrupt
-        print("Disabling transmit interrupt\n");
 		UCSR1B = (1<<RXEN1) | (1<<TXEN1) | (1<<RXCIE1);
 	} else {
-		i = tx_buffer_tail + 1;
-		if (i >= TX_BUFFER_SIZE) i = 0;
-		UDR1 = tx_buffer[i];
-		tx_buffer_tail = i;
+		UDR1 = tx_buffer_get();
 	}
 }
 
 // Receive Interrupt
 ISR(USART1_RX_vect) {
-    uint8_t c, i;
+    uint8_t scancode;
 
-    c = UDR1;
+    scancode = UDR1;
 
-    if ((c == SUN_KEY_LEFT_META) || (RELEASETOPRESS(c) == SUN_KEY_LEFT_META))
+    if ((scancode == SUN_KEY_LEFT_META) || (RELEASETOPRESS(scancode) == SUN_KEY_LEFT_META))
         // TODO: l_alt+l_meta sent both at the same time
         return;
 
-    i = rx_buffer_head + 1;
-    if (i >= RX_BUFFER_SIZE) i = 0;
-    if (i != rx_buffer_tail) {
-        /*
-        if (c != SUN_RESPONSE_IDLE) {
-            print("add to rx_buffer: sun=");
-            phex(c);
-            print("; hid=");
-            phex(keycode[c]);
-            print("; release=");
-            phex(keycode[RELEASETOPRESS(c)]);
-            print("\n");
-        }
-        */
-        rx_buffer[i] = c;
-        rx_buffer_head = i;
-    }
+    rx_buffer_put(scancode);
 }
