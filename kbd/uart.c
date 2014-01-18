@@ -95,5 +95,6 @@ ISR(USART1_RX_vect) {
         // TODO: l_alt+l_meta sent both at the same time
         return;
 
+    print("received scancode\n");
     rx_buffer_put(scancode);
 }

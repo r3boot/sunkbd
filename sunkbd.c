@@ -24,6 +24,7 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
+#include <avr/wdt.h>
 #include <stdint.h>
 #include <util/delay.h>
 #include "usb/usb_keyboard.h"
@@ -33,63 +34,118 @@
 #include "kbd/uart.h"
 #include "kbd/keymap.h"
 
-#define RESET_CONFIG    (DDRD |= (0<<1))    // D1
-#define RESET_PULLUP    (PORTD |= (1<<1))
+#define RESET_CONFIG    (DDRD |= (0<<PB0))    // D0
+#define RESET_PULLUP    (PORTD |= (1<<PB0))
+#define RESET_PRESSED   (PINB & (1<<PB0))
 
-#define CFG_1_CONFIG    (DDRB |= (0<<4))    // B4
-#define CFG_2_CONFIG    (DDRB |= (0<<5))    // B5
-#define CFG_3_CONFIG    (DDRB |= (0<<6))    // B6
-#define CFG_4_CONFIG    (DDRF |= (0<<7))    // F7
+#define CFG_1_CONFIG    (DDRB |= (0<<PB1))
+#define CFG_2_CONFIG    (DDRB |= (0<<PB2))
+#define CFG_3_CONFIG    (DDRB |= (0<<PB3))
 
-#define CFG_1_PULLUP    (PORTB |= (1<<4))
-#define CFG_2_PULLUP    (PORTB |= (1<<5))
-#define CFG_3_PULLUP    (PORTB |= (1<<6))
-#define CFG_4_PULLUP    (PORTF |= (1<<7))
+#define CFG_1_PULLUP    (PORTB |= (1<<PB1))
+#define CFG_2_PULLUP    (PORTB |= (1<<PB2))
+#define CFG_3_PULLUP    (PORTB |= (1<<PB3))
 
-#define CFG_1_ENABLED   ~(PINB & (1<<4))
-#define CFG_2_ENABLED   ~(PINB & (1<<5))
-#define CFG_3_ENABLED   ~(PINB & (1<<6))
-#define CFG_4_ENABLED   ~(PINF & (1<<7))
+#define CFG_1_OPEN      (PINB & (1<<PB1))
+#define CFG_2_OPEN      (PINB & (1<<PB2))
+#define CFG_3_OPEN      (PINB & (1<<PB3))
 
-#define TX_LED_CONFIG	(DDRD |= (1<<6))    // D6
-#define TX_LED_ON		(PORTD |= (1<<6))
-#define TX_LED_OFF		(PORTD &= ~(1<<6))
+#define TX_LED_CONFIG	(DDRF |= (1<<PF0))    // B4
+#define TX_LED_ON		(PORTF &= ~(1<<PF0))
+#define TX_LED_OFF		(PORTF |= (1<<PF0))
 
-#define RX_LED_CONFIG	(DDRD |= (1<<7))    // D7
-#define RX_LED_ON		(PORTD |= (1<<7))
-#define RX_LED_OFF		(PORTD &= ~(1<<7))
+#define RX_LED_CONFIG	(DDRF |= (1<<PF1))    // B5
+#define RX_LED_ON		(PORTF &= ~(1<<PF1))
+#define RX_LED_OFF		(PORTF |= (1<<PF1))
 
 #define CPU_PRESCALE(n) (CLKPR = 0x80, CLKPR = (n))
 
-void( *device_reset) (void) = 0;
+volatile uint8_t click_enable = 0;
+volatile uint8_t debug_enable = 0;
+volatile uint8_t loader_enable = 0;
+
+void parse_jumper_config(void)
+{
+    if (!CFG_1_OPEN) {
+        click_enable = 1;
+        print("Key clicks enabled\n");
+    } else {
+        click_enable = 0;
+        print("Key clicks disabled\n");
+    }
+
+    if (!CFG_2_OPEN) {
+        debug_enable = 1;
+        print("Debugging enabled\n");
+    } else {
+        debug_enable = 0;
+        print("Debugging disabled\n");
+    }
+
+    if (!CFG_3_OPEN) {
+        loader_enable = 1;
+        print("Bootloader support enabled\n");
+    } else {
+        loader_enable = 0;
+        print("Bootloader support disabled\n");
+    }
+}
 
 // Reset interrupt
-ISR(INT1_vect)
+ISR(PCINT0_vect)
 {
-    device_reset();
+    if (RESET_PRESSED) {
+        cli();
+        if (loader_enable) {
+            cli();
+            UDCON = 1;
+            USBCON = (1<<FRZCLK);  // disable USB
+            UCSR1B = 0;
+            _delay_ms(5);
+            EIMSK = 0; PCICR = 0; SPCR = 0; ACSR = 0; EECR = 0; ADCSRA = 0;
+            TIMSK0 = 0; TIMSK1 = 0; TIMSK3 = 0; TIMSK4 = 0; UCSR1B = 0; TWCR = 0;
+            DDRB = 0; DDRC = 0; DDRD = 0; DDRE = 0; DDRF = 0; TWCR = 0;
+            PORTB = 0; PORTC = 0; PORTD = 0; PORTE = 0; PORTF = 0;
+            asm volatile("jmp 0x7E00");
+        } else {
+            TX_LED_ON;
+            print("Performing software reset\n");
+            parse_jumper_config();
+            print("Sun Type 3/4/5 USB Keyboard converter initialized\n");
+            TX_LED_OFF;
+        }
+        sei();
+    }
 }
 
 void device_init(void) {
 	// set for 16 MHz clock, and turn on the LED
 	CPU_PRESCALE(0);
 
+    // Enable reset button
     RESET_CONFIG;
     RESET_PULLUP;
+
+    PCICR |= (1 << PCIE0); /* Activate interrupt on enabled PCINT7-0 */
+    PCMSK0 |= (1 << PCINT0); /* Enable PCINT0 */
+    sei();
 
     CFG_1_CONFIG;
     CFG_2_CONFIG;
     CFG_3_CONFIG;
-    CFG_4_CONFIG;
 
     CFG_1_PULLUP;
     CFG_2_PULLUP;
     CFG_3_PULLUP;
-    CFG_4_PULLUP;
 
 	RX_LED_CONFIG;
     TX_LED_CONFIG;
+    RX_LED_OFF;
 
-    RX_LED_ON;
+    PCMSK0 |= (1 << PCINT0); /* Enable PCINT0 */
+    PCICR |= (1 << PCIE0); /* Activate interrupt on enabled PCINT7-0 */
+
+    TX_LED_ON;
 
     // Use USB raw-hid to transfer scancodes from the keyboard
     usb_init();
@@ -108,21 +164,12 @@ void device_init(void) {
     // initialize the keyboard uart
     uart_init(1200);
 
-    if (CFG_1_ENABLED) {
-        print("keyclicks enabled\n");
-    } else {
-        print("keyclicks disabled\n");
-    }
-
-    if (CFG_4_ENABLED) {
-        print("debugging enabled\n");
-    } else {
-        print("debugging disabled\n");
-    }
+    // Parse jumper-based configuration
+    parse_jumper_config();
 
     // Finally, display an initialization version and turn off the led
     print("Sun Type 3/4/5 USB Keyboard converter initialized\n");
-    RX_LED_OFF;
+    TX_LED_OFF;
 }
 
 // Basic command interpreter for controlling port pins
@@ -146,6 +193,7 @@ int main (void) {
                 if (!sc) {
                     break;
                 }
+                print("got scancode\n");
 
                 received_keys = 1;
                 if (!process_scancode(sc)) {
