@@ -61,7 +61,7 @@ uint8_t uart_getc(void) {
         return 0;
     }
 
-    return tx_buffer_get();
+    return rx_buffer_get();
 }
 
 // Return the number of bytes waiting in the receive buffer.

@@ -24,13 +24,13 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
-#include <avr/wdt.h>
 #include <stdint.h>
 #include <util/delay.h>
 #include "usb/usb_keyboard.h"
 #include "usb/usb_config.h"
 #include "usb/print.h"
 #include "kbd/keyboard.h"
+#include "kbd/buffers.h"
 #include "kbd/uart.h"
 #include "kbd/keymap.h"
 
@@ -96,25 +96,20 @@ ISR(PCINT0_vect)
 {
     if (RESET_PRESSED) {
         cli();
+        UDCON = 1;
+        USBCON = (1<<FRZCLK);  // disable USB
+        UCSR1B = 0;
+        _delay_ms(5);
+        EIMSK = 0; PCICR = 0; SPCR = 0; ACSR = 0; EECR = 0; ADCSRA = 0;
+        TIMSK0 = 0; TIMSK1 = 0; TIMSK3 = 0; TIMSK4 = 0; UCSR1B = 0; TWCR = 0;
+        DDRB = 0; DDRC = 0; DDRD = 0; DDRE = 0; DDRF = 0; TWCR = 0;
+        PORTB = 0; PORTC = 0; PORTD = 0; PORTE = 0; PORTF = 0;
+
         if (loader_enable) {
-            cli();
-            UDCON = 1;
-            USBCON = (1<<FRZCLK);  // disable USB
-            UCSR1B = 0;
-            _delay_ms(5);
-            EIMSK = 0; PCICR = 0; SPCR = 0; ACSR = 0; EECR = 0; ADCSRA = 0;
-            TIMSK0 = 0; TIMSK1 = 0; TIMSK3 = 0; TIMSK4 = 0; UCSR1B = 0; TWCR = 0;
-            DDRB = 0; DDRC = 0; DDRD = 0; DDRE = 0; DDRF = 0; TWCR = 0;
-            PORTB = 0; PORTC = 0; PORTD = 0; PORTE = 0; PORTF = 0;
             asm volatile("jmp 0x7E00");
         } else {
-            TX_LED_ON;
-            print("Performing software reset\n");
-            parse_jumper_config();
-            print("Sun Type 3/4/5 USB Keyboard converter initialized\n");
-            TX_LED_OFF;
+            asm volatile("jmp 0x0000");
         }
-        sei();
     }
 }
 
@@ -184,7 +179,6 @@ int main (void) {
 
     // Enter main processing loop
 	while (1) {
-
         received_keys = 0;
         while (key_slot_available()) {
             if (uart_available()) {

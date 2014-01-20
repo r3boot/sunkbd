@@ -95,8 +95,9 @@ uint8_t process_scancode(uint8_t sc) {
             return 1;
         } else if (sc == KBD_RESP_INIT_SUCCESS_2) {
             kbd_init_resp_2 = 1;
-        } else if (sc == KBD_RESP_IDLE) {
+        } else if (sc == KBD_RESP_INIT_SUCCESS_3) {
             if ((kbd_init_resp_1) && (kbd_init_resp_2)) {
+                print("Keyboard initialized\n");
                 kbd_initialized = 1;
                 kbd_init_resp_1 = 0;
                 kbd_init_resp_2 = 0;
