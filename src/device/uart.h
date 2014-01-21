@@ -1,7 +1,9 @@
-#ifndef _uart_included_h_
-#define _uart_included_h_
+#ifndef _uart_h_
+#define _uart_h_
 
 #include <stdint.h>
+
+#define KBD_BAUDRATE    1200
 
 void uart_init(uint32_t baud);
 void uart_putc(uint8_t c);

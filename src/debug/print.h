@@ -2,12 +2,12 @@
 #define print_h__
 
 #include <avr/pgmspace.h>
-#include "usb_keyboard.h"
+#include "device/usb.h"
 
 // this macro allows you to write print("some text") and
 // the string is automatically placed into flash memory :)
 #define print(s) print_P(PSTR(s))
-#define pchar(c) usb_debug_putchar(c)
+#define pchar(c) usb_debug_putc(c)
 
 void print_P(const char *s);
 void phex(unsigned char c);

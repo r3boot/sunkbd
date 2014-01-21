@@ -1,15 +1,20 @@
-//Some extra definitions for HID stuff used by the main program, not by the USB framework.
+/*
+ * Scancode definitions for USB-HID devices.
+ * Included are both the pc105 scancodes, as well as the remote control codes
+ */
 
-#define HID_ARRAY_START 2
-#define HID_MAX_KEYS 6 //Maximum amount of keys in HID data array
+// Various HID errors
+#define HID_NO_EVENT                0x00
+#define HID_ERR_OVERRUN             0x01
+#define HID_ERR_POST                0x02
 
-// HID Remote keys
+// HID Remote Control keys
 #define HID_REMOTE_POWER            0x01
 #define HID_REMOTE_MUTE             0x02
 #define HID_REMOTE_VOLUME_UP        0x04
 #define HID_REMOTE_VOLUME_DOWN      0x08
 
-//HID Modifier keys
+// HID scancode modifier keys
 #define HID_MODIFIER_LEFT_CONTROL	0x01
 #define HID_MODIFIER_LEFT_SHIFT     0x02
 #define HID_MODIFIER_LEFT_ALT       0x04
@@ -19,29 +24,26 @@
 #define HID_MODIFIER_RIGHT_ALT      0x40
 #define HID_MODIFIER_RIGHT_GUI      0x80
 
-//HID errors
-#define HID_NO_EVENT 0x00
-#define HID_ERR_OVERRUN 0x01
-#define HID_ERR_POST 0x02
+// HID keys used for keyboard settings
+#define HID_KEY_LEFT_GUI            0xE3
+#define HID_KEY_RIGHT_GUI           0xE7
+#define HID_KEY_LEFT_ALT            0xE2
+#define HID_KEY_RIGHT_ALT           0xE6
+#define HID_KEY_LEFT_SHIFT          0xE1
+#define HID_KEY_RIGHT_SHIFT         0xE5
+#define HID_KEY_LEFT_CONTROL        0xE0
+#define HID_KEY_RIGHT_CONTROL       0xE4
 
-//HID keys used for keyboard settings
-#define HID_KEY_LEFT_GUI 0xE3
-#define HID_KEY_RIGHT_GUI 0xE7
-#define HID_KEY_LEFT_ALT 0xE2
-#define HID_KEY_RIGHT_ALT 0xE6
-#define HID_KEY_LEFT_SHIFT 0xE1
-#define HID_KEY_RIGHT_SHIFT 0xE5
-#define HID_KEY_LEFT_CONTROL 0xE0
-#define HID_KEY_RIGHT_CONTROL 0xE4
+// HID keys which have a LED and toggle state
+#define HID_KEY_CAPS_LOCK           0x39
+#define HID_KEY_NUM_LOCK            0x53
+#define HID_KEY_SCROLL_LOCK         0x47
+#define HID_KEY_COMPOSE             0x65
 
-#define HID_KEY_CAPS_LOCK 0x39
-#define HID_KEY_NUM_LOCK 0x53
-#define HID_KEY_SCROLL_LOCK 0x47
-#define HID_KEY_COMPOSE 0x65
 #define HID_KEY_TILDE 0x35
 #define HID_KEY_ESC 0x29
 
-#define HID_KEY_APP 0x65
+#define HID_KEY_APP             0x65
 #define HID_KEY_VOL_UP          0x80
 #define HID_KEY_VOL_DOWN        0x81
 #define HID_KEY_VOL_MUTE        0x7F

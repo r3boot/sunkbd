@@ -1,10 +1,12 @@
 //Scancode conversion table. Format: index=SUN scancode, table[index]=HID scancode
 //The keyboard sends one of these codes when a key is pressed; when the key is released it sends the code + 0x7F.
 //The microcontroller then adds or removes the HID code from the pressed key list.
-#include "usb/extra_hid_defs.h"
-#include "kbd/sun_defs.h"
 
-static const uint8_t keycode[]={
+#include "keyboard/type5.h"
+
+#include "include/hid_scancodes.h"
+
+static const uint8_t keymap[]={
 0,		// undefined
 HID_KEY_F14,	// Stop (mapped to F14)
 HID_KEY_VOL_DOWN,	// Volume down ; was 0x81
