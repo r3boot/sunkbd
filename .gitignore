@@ -8,4 +8,5 @@
 *.map
 *.o
 *.sym
+.obj
 3rdparty
