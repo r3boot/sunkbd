@@ -1,5 +1,5 @@
-Sun Keyboard Type 5/6 to USB converter
-========================================
+Sun Keyboard to USB converter
+=============================
 
 Introduction
 ------------
@@ -13,10 +13,12 @@ TL;DR
 1. Configure the jumpers to enable bootloader support
 2. Attach keyboard to controller
 3. Attach controller to USB cable
-4. Run the following commands
-    make clean
-    make all
-    make program
+4. Run the following commands:
+```
+ make clean
+ make all
+ make program
+```
 
 Hardware overview
 -----------------
