@@ -14,10 +14,11 @@ TL;DR
 2. Attach keyboard to controller
 3. Attach controller to USB cable
 4. Run the following commands:
-```
- make clean
- make all
- make program
+
+```Shell
+make clean
+make all
+make program
 ```
 
 Hardware overview
